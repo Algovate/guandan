@@ -43,6 +43,8 @@ export const PlayType = {
   PAIR: 'pair',               // 对子
   TRIPLE: 'triple',           // 三张
   TRIPLE_WITH_PAIR: 'triple_with_pair', // 三带二
+  TRIPLE_PAIR: 'triple_pair', // 三连对
+  PLATE: 'plate',             // 钢板
   STRAIGHT: 'straight',       // 顺子
   STRAIGHT_FLUSH: 'straight_flush', // 同花顺
   BOMB: 'bomb',               // 炸弹
@@ -93,8 +95,8 @@ export const GamePhase = {
 
 export type GamePhase = typeof GamePhase[keyof typeof GamePhase];
 
-// 当前等级（从A开始）
-export type Level = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
+// 当前等级（从2开始升级到A）
+export type Level = '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'A';
 
 // 游戏状态
 export interface GameState {

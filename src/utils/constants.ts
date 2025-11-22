@@ -20,8 +20,8 @@ export const RANK_ORDER: Rank[] = [
   Rank.JOKER_BIG,
 ];
 
-// 等级顺序
-export const LEVEL_ORDER: Level[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+// 等级顺序（从2开始升级到A）
+export const LEVEL_ORDER: Level[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
 // 花色顺序
 export const SUIT_ORDER: Suit[] = [Suit.CLUB, Suit.DIAMOND, Suit.SPADE, Suit.HEART];
@@ -72,8 +72,8 @@ export const PLAY_TYPE_NAMES: Record<string, string> = {
   pair: '对子',
   triple: '三张',
   triple_with_pair: '三带二',
+  triple_pair: '三连对',
   plate: '钢板',
-  tube: '连对',
   straight: '顺子',
   straight_flush: '同花顺',
   bomb: '炸弹',

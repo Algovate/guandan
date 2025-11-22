@@ -35,7 +35,7 @@ export class GameStateManager {
       currentPlay: null,
       lastPlay: null,
       lastPlayPlayerIndex: -1,
-      level: 'A',
+      level: '2',
       mainSuit: null,
       mainRank: null,
       deck: [],
@@ -114,20 +114,47 @@ export class GameStateManager {
   }
 
   /**
-   * 叫主（简化：自动选择第一个出现的A作为主牌）
+   * 叫主（简化：自动选择第一个出现的当前级牌作为主牌）
+   * 规则：第一轮，中间随机翻一张牌，抓到者先出牌（这里简化处理）
    */
   callMain(): void {
-    // 简化实现：找到第一个A作为主牌
-    const player = this.state.players[this.state.currentPlayerIndex];
-    const aceCard = player.hand.find(card => card.rank === Rank.ACE);
+    // 根据当前等级确定主牌等级
+    const levelToRank: Record<string, Rank> = {
+      '2': Rank.TWO,
+      '3': Rank.THREE,
+      '4': Rank.FOUR,
+      '5': Rank.FIVE,
+      '6': Rank.SIX,
+      '7': Rank.SEVEN,
+      '8': Rank.EIGHT,
+      '9': Rank.NINE,
+      '10': Rank.TEN,
+      'J': Rank.JACK,
+      'Q': Rank.QUEEN,
+      'K': Rank.KING,
+      'A': Rank.ACE,
+    };
+    
+    const mainRankForLevel = levelToRank[this.state.level];
+    if (!mainRankForLevel) {
+      // 默认使用A
+      this.state.mainRank = Rank.ACE;
+      this.state.mainSuit = Suit.SPADE;
+      this.state.phase = GamePhase.PLAYING;
+      return;
+    }
 
-    if (aceCard) {
-      this.state.mainRank = Rank.ACE;
-      this.state.mainSuit = aceCard.suit;
+    // 简化实现：找到第一个当前级牌作为主牌
+    const player = this.state.players[this.state.currentPlayerIndex];
+    const levelCard = player.hand.find(card => card.rank === mainRankForLevel);
+
+    if (levelCard) {
+      this.state.mainRank = mainRankForLevel;
+      this.state.mainSuit = levelCard.suit;
     } else {
-      // 如果没有A，随机选择一个花色
+      // 如果没有当前级牌，随机选择一个花色
       const suits: Suit[] = [Suit.SPADE, Suit.HEART, Suit.DIAMOND, Suit.CLUB];
-      this.state.mainRank = Rank.ACE;
+      this.state.mainRank = mainRankForLevel;
       this.state.mainSuit = suits[Math.floor(Math.random() * suits.length)] || Suit.SPADE;
     }
 
@@ -246,27 +273,46 @@ export class GameStateManager {
     const winnerTeam = winner.team;
     this.state.teamScores[winnerTeam]++;
 
-    // 检查是否游戏结束（先到K的队伍获胜）
+    // 检查是否游戏结束
+    // 规则：从2打到A，2不必打，A必打
+    // 如果打到A，必须一名为头游，另一名不能为末游，才可以最终算过A赢得本局
     const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
-    if (currentLevelIndex >= LEVEL_ORDER.length - 1) {
+    
+    // 如果在A级，需要检查是否满足过A条件
+    if (this.state.level === 'A') {
+      // 简化实现：如果当前是A级且赢了，需要队友不是末游
+      // 这里需要更复杂的逻辑来判断头游和末游，暂时简化处理
+      // 如果A级赢了，游戏结束
       this.state.phase = GamePhase.GAME_END;
-    } else if (this.state.teamScores[winnerTeam] >= 2) {
-      // 简化：得分达到2就结束
+    } else if (currentLevelIndex >= LEVEL_ORDER.length - 1) {
+      // 已经到A级了
       this.state.phase = GamePhase.GAME_END;
     } else {
-      // 开始下一轮
+      // 开始下一轮（升级）
       this.startNextRound();
     }
   }
 
   /**
    * 开始下一轮
+   * 规则：双下升3级，对手有一家是末游升2级，自己对门是末游升1级
+   * 简化实现：每次升1级（可以根据实际情况扩展）
    */
   private startNextRound(): void {
     // 升级
     const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
-    if (currentLevelIndex < LEVEL_ORDER.length - 1) {
-      this.state.level = LEVEL_ORDER[currentLevelIndex + 1];
+    
+    // 2不必打，可以直接跳过
+    if (this.state.level === '2') {
+      // 如果当前是2级，直接升到3级（2不必打）
+      if (currentLevelIndex < LEVEL_ORDER.length - 1) {
+        this.state.level = LEVEL_ORDER[currentLevelIndex + 1];
+      }
+    } else {
+      // 其他级别正常升级
+      if (currentLevelIndex < LEVEL_ORDER.length - 1) {
+        this.state.level = LEVEL_ORDER[currentLevelIndex + 1];
+      }
     }
 
     // 重新发牌
