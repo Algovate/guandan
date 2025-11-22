@@ -64,7 +64,7 @@ const calculateFanLayout = (
   
   // 大幅增加水平间距，让牌充分展开，确保所有牌都清晰可见
   // 进一步增加基础间距，减少重叠，确保角标不被遮挡
-  const baseSpread = isMobile ? 35 : 55; // 显著增加基础间距
+  const baseSpread = isMobile ? 38 : 55; // 显著增加基础间距
   let spreadDistance = baseSpread;
   
   // 保持较大的间距，确保每张牌都清晰可见，角标不被遮挡
@@ -309,7 +309,7 @@ export default function PlayerHand() {
                         left: '50%',
                         bottom: 0,
                         transformOrigin: layout.transformOrigin,
-                        zIndex: isSelected ? 200 : (isHighlighted ? 100 : sortedHand.length - index + 10), // 提高z-index确保牌可见
+                        zIndex: isSelected ? 200 : (isHighlighted ? 100 : index + 10), // Standard fan: Right on Top
                         transformStyle: 'preserve-3d',
                         // 根据屏幕大小和展开状态动态调整marginLeft
                         // 极大幅度减少负margin，甚至使用微小的负margin，确保角标完全暴露

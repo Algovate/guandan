@@ -38,14 +38,15 @@ const PIP_POSITIONS: Record<number, { x: number, y: number, inverted?: boolean }
   ],
   7: [
     { x: 25, y: 20 }, { x: 75, y: 20 },
-    { x: 50, y: 35 }, // Extra pip
+    { x: 50, y: 35 }, // Top center
     { x: 25, y: 50 }, { x: 75, y: 50 },
     { x: 25, y: 80, inverted: true }, { x: 75, y: 80, inverted: true }
   ],
   8: [
     { x: 25, y: 20 }, { x: 75, y: 20 },
-    { x: 25, y: 40 }, { x: 75, y: 40 }, // Mid upper
-    { x: 25, y: 60, inverted: true }, { x: 75, y: 60, inverted: true }, // Mid lower
+    { x: 50, y: 35 }, // Top center
+    { x: 25, y: 50 }, { x: 75, y: 50 }, // Middle
+    { x: 50, y: 65, inverted: true }, // Bottom center
     { x: 25, y: 80, inverted: true }, { x: 75, y: 80, inverted: true }
   ],
   9: [
@@ -78,7 +79,7 @@ const PipGrid: React.FC<PipGridProps> = ({ rank, suit, color }) => {
       {positions.map((pos, index) => (
         <div
           key={index}
-          className="absolute w-[18%] h-[18%] flex items-center justify-center"
+          className="absolute w-[22%] h-[22%] flex items-center justify-center"
           style={{
             left: `${pos.x}%`,
             top: `${pos.y}%`,

@@ -65,8 +65,8 @@ const CornerIndex: React.FC<{
   const rankText = getRankDisplay(rank);
   
   // Scale font size based on card size
-  const fontSize = size === 'xs' ? 'text-[8px]' : size === 'sm' ? 'text-[10px]' : size === 'md' ? 'text-sm' : 'text-lg';
-  const iconSize = size === 'xs' ? 'w-2 h-2' : size === 'sm' ? 'w-2.5 h-2.5' : size === 'md' ? 'w-3 h-3' : 'w-3.5 h-3.5';
+  const fontSize = size === 'xs' ? 'text-[10px]' : size === 'sm' ? 'text-xs' : size === 'md' ? 'text-lg' : 'text-2xl';
+  const iconSize = size === 'xs' ? 'w-2 h-2' : size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-3.5 h-3.5' : 'w-4 h-4';
   const padding = size === 'xs' ? 'p-0.5' : 'p-1';
   
   let positionClass = '';
@@ -141,7 +141,7 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
       default:
         const rankNum = parseInt(rank as string, 10);
         // Adjust padding for pip grid
-        const pipPadding = size === 'xs' ? 'p-2' : size === 'sm' ? 'p-3' : size === 'md' ? 'p-5' : 'p-8';
+        const pipPadding = size === 'xs' ? 'p-1.5' : size === 'sm' ? 'p-2.5' : size === 'md' ? 'p-4' : 'p-6';
         return <div className={`w-full h-full ${pipPadding}`}><PipGrid rank={rankNum} suit={suit} color={color} /></div>;
     }
   };
@@ -155,7 +155,6 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
       )}
 
       <CornerIndex rank={rank} suit={suit} color={color} position="top-left" size={size} />
-      <CornerIndex rank={rank} suit={suit} color={color} position="top-right" size={size} />
       <CornerIndex rank={rank} suit={suit} color={color} position="bottom-right" size={size} />
 
       {renderCenterContent()}
