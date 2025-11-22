@@ -108,6 +108,7 @@ export interface GameState {
   deck: Card[];
   teamScores: [number, number]; // 两个队伍的得分
   roundWinner: number | null;
+  playHistory?: Play[];  // 出牌历史（可选）
 }
 
 // AI难度
