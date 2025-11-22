@@ -116,7 +116,7 @@ export default function PlayerHand() {
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pointer-events-none">
 
       {/* Action Buttons */}
-      <div className="absolute bottom-[170px] md:bottom-[280px] z-[300] flex items-center justify-center gap-4 md:gap-6 pointer-events-auto scale-90 md:scale-100 origin-bottom">
+      <div className="absolute bottom-[280px] md:bottom-[380px] z-[300] flex items-center justify-center gap-4 md:gap-6 pointer-events-auto scale-90 md:scale-100 origin-bottom">
         {isCurrentPlayer && (
           <>
             <motion.button
@@ -160,7 +160,7 @@ export default function PlayerHand() {
       </div>
 
       {/* Hand Area */}
-      <div className="relative w-full flex justify-center items-end pb-4 md:pb-8 px-2 md:px-4 pointer-events-auto" style={{ height: isMobile ? '200px' : '260px' }}>
+      <div className="relative w-full flex justify-center items-end pb-4 md:pb-8 px-2 md:px-4 pointer-events-auto mb-20 md:mb-24" style={{ height: isMobile ? '240px' : '300px' }}>
         <div className="relative h-full flex justify-center items-end w-full max-w-5xl">
           <AnimatePresence mode="popLayout">
             {sortedHand.map((card, index) => {
@@ -194,7 +194,7 @@ export default function PlayerHand() {
                   }}
                   style={{
                     position: 'absolute',
-                    bottom: isMobile ? 10 : 20,
+                    bottom: isMobile ? 20 : 30,
                     cursor: 'pointer',
                     transformOrigin: 'center bottom'
                   }}
@@ -215,7 +215,7 @@ export default function PlayerHand() {
       </div>
 
       {/* Controls Footer */}
-      <div className="absolute bottom-[150px] right-2 md:bottom-6 md:right-6 flex gap-2 z-50 pointer-events-auto">
+      <div className="absolute bottom-[180px] right-2 md:bottom-8 md:right-6 flex gap-2 z-50 pointer-events-auto">
         <button
           onClick={() => setShowHandDetail(true)}
           className="bg-black/40 hover:bg-black/60 text-white p-2 md:p-3 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg"
@@ -226,7 +226,7 @@ export default function PlayerHand() {
       </div>
 
       {/* User Info Panel */}
-      <div className="absolute bottom-[150px] left-2 md:bottom-6 md:left-6 z-50 pointer-events-auto flex items-center gap-4 origin-bottom-left scale-90 md:scale-100">
+      <div className="absolute bottom-[180px] left-2 md:bottom-8 md:left-6 z-50 pointer-events-auto flex items-center gap-4 origin-bottom-left scale-90 md:scale-100">
         <div className="glass-panel pl-3 pr-6 py-2 md:pl-4 md:pr-8 md:py-3 rounded-2xl flex items-center gap-3 md:gap-4 border border-white/20 shadow-2xl bg-black/60 backdrop-blur-xl transition-all hover:bg-black/70 hover:scale-105">
           <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center -my-4 -ml-2">
             {player.avatarImage ? (
