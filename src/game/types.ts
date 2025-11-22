@@ -121,3 +121,11 @@ export const AIDifficulty = {
 } as const;
 
 export type AIDifficulty = typeof AIDifficulty[keyof typeof AIDifficulty];
+
+// 游戏模式
+export const GameMode = {
+  COMPETITIVE: 'competitive', // 竞技模式
+  TEACHING: 'teaching',       // 教学模式
+} as const;
+
+export type GameMode = typeof GameMode[keyof typeof GameMode];

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import type { GameState, Card } from '../game/types';
 import { GameStateManager } from '../game/GameState';
-import { AIDifficulty, GamePhase } from '../game/types';
+import { AIDifficulty, GamePhase, GameMode } from '../game/types';
 import { AIPlayerManager } from '../ai/AIPlayer';
 import { createPlay } from '../game/CardTypes';
 import { PLAY_TYPE_NAMES } from '../utils/constants';
+import { StrategyEngine } from '../game/ai/StrategyEngine';
 
 interface GameStore {
   // 游戏状态
@@ -15,6 +16,7 @@ interface GameStore {
   // UI状态
   selectedCards: Card[];
   aiDifficulty: AIDifficulty;
+  gameMode: GameMode;
   showTutorial: boolean;
   showSettings: boolean;
   showDebug: boolean;
@@ -31,6 +33,8 @@ interface GameStore {
   pass: () => { success: boolean; error?: string };
   callMain: () => void;
   setAIDifficulty: (difficulty: AIDifficulty) => void;
+  setGameMode: (mode: GameMode) => void;
+  getHint: () => void;
   toggleTutorial: () => void;
   toggleSettings: () => void;
   toggleDebug: () => void;
@@ -45,6 +49,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   aiManager: null,
   selectedCards: [],
   aiDifficulty: AIDifficulty.MEDIUM,
+  gameMode: GameMode.COMPETITIVE,
   showTutorial: false,
   showSettings: false,
   showDebug: false,
@@ -184,6 +189,40 @@ export const useGameStore = create<GameStore>((set, get) => ({
       aiManager.setDifficulty(difficulty);
     }
     set({ aiDifficulty: difficulty });
+  },
+
+  setGameMode: (mode: GameMode) => {
+    set({ gameMode: mode });
+    get().showToast(`已切换至${mode === GameMode.COMPETITIVE ? '竞技' : '教学'}模式`, 'success');
+  },
+
+  getHint: () => {
+    const { gameState, gameMode, aiDifficulty } = get();
+    if (!gameState || gameMode !== GameMode.TEACHING) return;
+
+    const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+    if (currentPlayer.isAI) return;
+
+    // 使用策略引擎获取建议
+    const suggestedCards = StrategyEngine.decideMove(
+      currentPlayer,
+      gameState,
+      aiDifficulty
+    );
+
+    if (suggestedCards && suggestedCards.length > 0) {
+      set({ selectedCards: suggestedCards });
+      get().showToast('已为您选择推荐牌型', 'info');
+    } else {
+      // 如果建议是过牌（null），且当前必须出牌（首出），这通常不应该发生，除非没牌了
+      // 如果是跟牌且建议过牌，提示"建议不出"
+      if (gameState.lastPlay && gameState.lastPlayPlayerIndex !== gameState.currentPlayerIndex) {
+        get().showToast('建议不出', 'info');
+        set({ selectedCards: [] });
+      } else {
+        get().showToast('没有更好的出牌建议', 'info');
+      }
+    }
   },
 
   toggleTutorial: () => {

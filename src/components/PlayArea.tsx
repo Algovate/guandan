@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
+import { GamePhase, GameMode } from '../game/types';
 import Card from './Card';
 import { PLAY_TYPE_NAMES } from '../utils/constants';
 import { PlayerPosition } from '../game/types';

@@ -3,11 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import Card from './Card';
 import HandDetail from './HandDetail';
-import type { Card as CardType } from '../game/types';
 import { findPossiblePlays } from '../game/CardTypes';
 import { sortCards } from '../utils/helpers';
-import { PLAY_TYPE_NAMES } from '../utils/constants';
-import { GamePhase } from '../game/types';
+import { GamePhase, GameMode } from '../game/types';
 
 // 扇形布局计算
 const calculateFanLayout = (
@@ -45,10 +43,10 @@ export default function PlayerHand() {
     gameState,
     selectedCards,
     selectCard,
-    clearSelection,
     playCards,
     pass,
-    showToast
+    gameMode,
+    getHint
   } = useGameStore();
 
   if (!gameState) return null;
@@ -113,22 +111,6 @@ export default function PlayerHand() {
     }
   };
 
-  const handleHint = () => {
-    if (possiblePlays.length > 0) {
-      const hintPlay = possiblePlays[0];
-      clearSelection();
-      const cardsToSelect = hintPlay.cards
-        .map(c => sortedHand.find(h => h.id === c.id))
-        .filter((c): c is CardType => c !== undefined);
-
-      setTimeout(() => {
-        cardsToSelect.forEach((card, index) => {
-          setTimeout(() => selectCard(card), index * 50);
-        });
-      }, 100);
-      showToast(`Hint: ${PLAY_TYPE_NAMES[hintPlay.type]}`, 'info');
-    }
-  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pointer-events-none">
@@ -147,15 +129,16 @@ export default function PlayerHand() {
               不出
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleHint}
-              disabled={possiblePlays.length === 0}
-              className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32]"
-            >
-              提示
-            </motion.button>
+            {gameMode === GameMode.TEACHING && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={getHint}
+                className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32]"
+              >
+                提示
+              </motion.button>
+            )}
 
             <motion.button
               whileHover={{ scale: 1.05 }}

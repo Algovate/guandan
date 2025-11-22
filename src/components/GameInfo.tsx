@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { RANK_NAMES } from '../utils/constants';
+import { GameMode } from '../game/types';
 import { SuitIcon } from './card/CardAssets';
 
 export default function GameInfo() {
-  const { gameState, toggleSettings, toggleTutorial } = useGameStore();
+  const { gameState, toggleSettings, toggleTutorial, gameMode } = useGameStore();
 
   if (!gameState) return null;
 
@@ -58,17 +59,44 @@ export default function GameInfo() {
             )}
           </div>
         </motion.div>
-      </motion.div>
+
+        {/* 游戏模式指示器 - 放在等级信息下方 */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="mt-3"
+        >
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleSettings}
+            className={`
+              px-4 py-1.5 rounded-full backdrop-blur-md border shadow-lg flex items-center gap-2 w-fit cursor-pointer
+              ${gameMode === GameMode.TEACHING
+                ? 'bg-blue-500/20 border-blue-400/30 text-blue-100 hover:bg-blue-500/30'
+                : 'bg-purple-500/20 border-purple-400/30 text-purple-100 hover:bg-purple-500/30'
+              }
+            `}
+          >
+            <span className="text-lg">{gameMode === GameMode.TEACHING ? '🎓' : '🏆'}</span>
+            <span className="font-display font-bold text-sm tracking-wide">
+              {gameMode === GameMode.TEACHING ? '教学模式' : '竞技模式'}
+            </span>
+          </motion.div>
+        </motion.div>
+      </motion.div >
 
       {/* 右上角：比分 + 功能按钮 */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
+      < motion.div
+        initial={{ opacity: 0, x: 20 }
+        }
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
         className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex items-start gap-3"
       >
         {/* 比分板 */}
-        <motion.div
+        < motion.div
           whileHover={{ scale: 1.02 }}
           className="glass-panel px-5 py-3 flex items-center gap-4 rounded-2xl"
         >
@@ -89,10 +117,10 @@ export default function GameInfo() {
               <span className="text-white text-lg font-bold font-serif relative z-10">{gameState.teamScores[1]}</span>
             </div>
           </div>
-        </motion.div>
+        </motion.div >
 
         {/* 按钮组 */}
-        <div className="flex gap-2">
+        < div className="flex gap-2" >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -112,8 +140,8 @@ export default function GameInfo() {
           >
             <span className="text-xl">⚙️</span>
           </motion.button>
-        </div>
-      </motion.div>
+        </div >
+      </motion.div >
     </>
   );
 }
