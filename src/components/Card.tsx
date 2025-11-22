@@ -36,9 +36,9 @@ const SIZE_CLASSES: Record<CardSize, string> = {
 
 // 获取卡牌颜色
 const getCardColor = (suit: Suit, rank: Rank): string => {
-  if (rank === Rank.JOKER_BIG) return '#D40000'; // classic-red
-  if (rank === Rank.JOKER_SMALL) return '#0A0A0A'; // classic-black
-  return (suit === Suit.HEART || suit === Suit.DIAMOND) ? '#D40000' : '#0A0A0A';
+  if (rank === Rank.JOKER_BIG) return '#b91c1c'; // darker red
+  if (rank === Rank.JOKER_SMALL) return '#1a1a1a'; // darker black
+  return (suit === Suit.HEART || suit === Suit.DIAMOND) ? '#b91c1c' : '#1a1a1a';
 };
 
 // 获取显示的数字/字母
@@ -48,31 +48,31 @@ const getRankDisplay = (rank: Rank): string => {
     case Rank.JACK: return 'J';
     case Rank.QUEEN: return 'Q';
     case Rank.KING: return 'K';
-    case Rank.JOKER_SMALL: return 'JOKER'; 
+    case Rank.JOKER_SMALL: return 'JOKER';
     case Rank.JOKER_BIG: return 'JOKER';
     default: return rank.toString();
   }
 };
 
-const CornerIndex: React.FC<{ 
-  rank: Rank; 
-  suit: Suit; 
-  color: string; 
+const CornerIndex: React.FC<{
+  rank: Rank;
+  suit: Suit;
+  color: string;
   position: 'top-left' | 'top-right' | 'bottom-right' | 'bottom-left';
   size: CardSize;
 }> = ({ rank, suit, color, position, size }) => {
   const isJoker = rank === Rank.JOKER_SMALL || rank === Rank.JOKER_BIG;
   const rankText = getRankDisplay(rank);
-  
+
   // Scale font size based on card size
   const fontSize = size === 'xs' ? 'text-[10px]' : size === 'sm' ? 'text-xs' : size === 'md' ? 'text-lg' : 'text-2xl';
   const iconSize = size === 'xs' ? 'w-2 h-2' : size === 'sm' ? 'w-3 h-3' : size === 'md' ? 'w-3.5 h-3.5' : 'w-4 h-4';
   const padding = size === 'xs' ? 'p-0.5' : 'p-1';
-  
+
   let positionClass = '';
   switch (position) {
     case 'top-left': positionClass = 'top-1 left-1'; break;
-    case 'top-right': positionClass = 'top-1 right-1'; break; 
+    case 'top-right': positionClass = 'top-1 right-1'; break;
     case 'bottom-right': positionClass = 'bottom-1 right-1 rotate-180'; break;
     case 'bottom-left': positionClass = 'bottom-1 left-1 rotate-180'; break;
   }
@@ -81,7 +81,7 @@ const CornerIndex: React.FC<{
   if (isJoker) {
     return (
       <div className={`absolute flex flex-col items-center ${positionClass} ${padding}`}>
-        <div 
+        <div
           className={`font-serif font-bold leading-none tracking-widest writing-vertical-rl text-orientation-upright ${fontSize}`}
           style={{ color }}
         >
@@ -109,7 +109,7 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
   const { rank, suit } = card;
   const isJoker = rank === Rank.JOKER_SMALL || rank === Rank.JOKER_BIG;
   const suitKey = suit?.toLowerCase() as any;
-  
+
   // Scale padding based on size
   const padding = size === 'xs' ? 'p-1' : size === 'sm' ? 'p-2' : size === 'md' ? 'p-4' : 'p-6';
 
@@ -118,7 +118,7 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
     if (isJoker) {
       return (
         <div className={`w-full h-full flex flex-col items-center justify-center ${padding}`}>
-           <JokerGraphic color={color} />
+          <JokerGraphic color={color} />
         </div>
       );
     }
@@ -134,7 +134,7 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
         return (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-1/3 h-1/3">
-               <SuitIcon suit={suitKey} style={{ color }} />
+              <SuitIcon suit={suitKey} style={{ color }} />
             </div>
           </div>
         );
@@ -147,11 +147,9 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-lg overflow-hidden relative select-none backface-hidden">
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]"></div>
-
+    <div className="card-face w-full h-full select-none backface-hidden">
       {(rank === Rank.JACK || rank === Rank.QUEEN || rank === Rank.KING) && (
-         <div className="absolute inset-2 border border-[#D4AF37] opacity-30 rounded-sm pointer-events-none"></div>
+        <div className="absolute inset-2 border border-[#D4AF37] opacity-30 rounded-sm pointer-events-none"></div>
       )}
 
       <CornerIndex rank={rank} suit={suit} color={color} position="top-left" size={size} />
@@ -163,18 +161,11 @@ const CardFace: React.FC<{ card: CardType; color: string; size: CardSize }> = ({
 };
 
 const CardBack: React.FC = () => (
-  <div className="w-full h-full rounded-lg overflow-hidden relative backface-hidden bg-[#003366] border-4 border-white shadow-inner">
-    <div className="w-full h-full opacity-30" 
-         style={{ 
-           backgroundImage: `radial-gradient(#fff 1px, transparent 1px), radial-gradient(#fff 1px, transparent 1px)`,
-           backgroundSize: '10px 10px',
-           backgroundPosition: '0 0, 5px 5px'
-         }}>
-    </div>
+  <div className="card-back w-full h-full overflow-hidden relative backface-hidden">
     <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-1/3 h-1/3 border-2 border-white/50 rounded-full flex items-center justify-center">
-            <div className="w-2/3 h-2/3 border border-white/30 rounded-full"></div>
-        </div>
+      <div className="w-1/3 h-1/3 border-2 border-white/40 rounded-full flex items-center justify-center backdrop-blur-sm">
+        <div className="w-2/3 h-2/3 border border-white/20 rounded-full bg-white/5"></div>
+      </div>
     </div>
   </div>
 );
@@ -197,7 +188,7 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const color = useMemo(() => getCardColor(card.suit, card.rank), [card.suit, card.rank]);
   const isFaceDown = faceDown || (faceUp === false);
-  
+
   // Get dimension classes
   const sizeClass = SIZE_CLASSES[size];
 
@@ -207,26 +198,30 @@ export const Card: React.FC<CardProps> = ({
       initial={initial}
       animate={animate}
       whileHover={whileHover}
-      style={{ 
-        ...style, 
+      style={{
+        ...style,
         transformStyle: 'preserve-3d',
         perspective: '1000px'
       }}
       className={`
-        relative rounded-lg cursor-pointer transition-shadow duration-200
-        border border-black/20 shadow-[0_2px_5px_rgba(0,0,0,0.3)]
+        relative rounded-xl cursor-pointer transition-all duration-200
         ${sizeClass}
-        ${isSelected ? 'ring-4 ring-[#D4AF37] ring-opacity-80 z-10 transform -translate-y-6' : ''}
+        ${isSelected ? 'z-10 -translate-y-6' : ''}
         ${isHighlighted ? 'ring-2 ring-[#D4AF37] ring-opacity-50' : ''}
         ${!isPlayable && !isFaceDown ? 'brightness-75 grayscale-[0.3]' : ''}
         ${className}
       `}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
     >
       {isFaceDown ? (
         <CardBack />
       ) : (
-        <CardFace card={card} color={color} size={size} />
+        <div className={`w-full h-full ${isSelected ? 'card-face selected' : ''}`}>
+          <CardFace card={card} color={color} size={size} />
+        </div>
       )}
     </motion.div>
   );

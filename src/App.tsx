@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import GameTable from './components/GameTable';
 import Tutorial from './components/Tutorial';
 import Settings from './components/Settings';
+import DebugPanel from './components/DebugPanel';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <GameTable />
       <Tutorial />
       <Settings />
+      <DebugPanel />
     </div>
   );
 }
