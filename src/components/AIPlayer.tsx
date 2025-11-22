@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import type { Player } from '../game/types';
 import { PlayerPosition } from '../game/types';
+import { useGameStore } from '../store/gameStore';
 
 interface AIPlayerProps {
   player: Player;
@@ -38,6 +39,7 @@ const UserIcon = () => (
 
 export default function AIPlayer({ player, position, isCurrentPlayer, isThinking = false }: AIPlayerProps) {
   const cardCount = player.hand.length;
+  const showCardCountThreshold = useGameStore(state => state.showCardCountThreshold);
   const teamColor = player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700';
 
   return (
@@ -106,13 +108,15 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
             {player.team + 1}
           </div>
 
-          {/* 牌数 Badge - 右上角悬浮 */}
-          <div className="absolute top-0 right-0 w-6 h-6 md:w-9 md:h-9 z-20 transform translate-x-1 -translate-y-1 md:translate-x-2 md:-translate-y-2">
-            <div className="relative w-full h-full flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#3E2723] rounded-lg border md:border-2 border-[#D4AF37] shadow-md transform rotate-12"></div>
-              <span className="relative text-white font-bold font-serif text-[10px] md:text-sm z-10">{cardCount}</span>
+          {/* 牌数 Badge - 右上角悬浮（仅在剩余牌数≤阈值时显示） */}
+          {cardCount <= showCardCountThreshold && (
+            <div className="absolute top-0 right-0 w-6 h-6 md:w-9 md:h-9 z-20 transform translate-x-1 -translate-y-1 md:translate-x-2 md:-translate-y-2">
+              <div className="relative w-full h-full flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#3E2723] rounded-lg border md:border-2 border-[#D4AF37] shadow-md transform rotate-12"></div>
+                <span className="relative text-white font-bold font-serif text-[10px] md:text-sm z-10">{cardCount}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* 玩家名字 - 增强对比度 */}

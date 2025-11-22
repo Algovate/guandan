@@ -25,6 +25,7 @@ interface GameStore {
   toastMessage: { message: string; type?: 'success' | 'error' | 'info' | 'warning' } | null;
   soundEnabled: boolean;
   soundVolume: number;
+  showCardCountThreshold: number;
 
   // Actions
   initGame: () => void;
@@ -45,6 +46,7 @@ interface GameStore {
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
   setSoundEnabled: (enabled: boolean) => void;
   setSoundVolume: (volume: number) => void;
+  setShowCardCountThreshold: (threshold: number) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -60,6 +62,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   toastMessage: null,
   soundEnabled: true,
   soundVolume: 0.5,
+  showCardCountThreshold: 5,
 
   initGame: () => {
     const manager = new GameStateManager();
@@ -200,6 +203,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const clampedVolume = Math.max(0, Math.min(1, volume));
     set({ soundVolume: clampedVolume });
     soundManager.setVolume(clampedVolume);
+  },
+
+  setShowCardCountThreshold: (threshold: number) => {
+    const clampedThreshold = Math.max(1, Math.min(27, threshold));
+    set({ showCardCountThreshold: clampedThreshold });
   },
 
   getHint: () => {

@@ -19,7 +19,9 @@ export default function Settings() {
     soundEnabled,
     soundVolume,
     setSoundEnabled,
-    setSoundVolume
+    setSoundVolume,
+    showCardCountThreshold,
+    setShowCardCountThreshold
   } = useGameStore();
 
   const modeOptions = [
@@ -207,6 +209,40 @@ export default function Settings() {
                               <div className="text-xs text-gray-400 leading-relaxed">
                                 每局游戏AI对手会随机分配不同的性格风格：激进型、保守型、配合型、均衡型，让每局游戏都充满变数和挑战！
                               </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 显示牌数阈值设置 */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <div className="text-lg">🔢</div>
+                            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">显示牌数阈值</h3>
+                          </div>
+                          <div className="bg-white/5 rounded-lg border border-white/10 p-3">
+                            <div className="mb-3">
+                              <div className="font-semibold text-sm text-gray-100 mb-1">当玩家剩余牌数≤此值时显示牌数</div>
+                              <div className="text-xs text-gray-400">默认值：5</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs text-gray-300 min-w-[40px] font-medium">阈值</div>
+                              <input
+                                type="range"
+                                min="1"
+                                max="27"
+                                value={showCardCountThreshold}
+                                onChange={(e) => setShowCardCountThreshold(Number(e.target.value))}
+                                className="flex-1 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-compact"
+                                style={{
+                                  background: `linear-gradient(to right, #d4af37 0%, #d4af37 ${((showCardCountThreshold - 1) / 26) * 100}%, #4a5568 ${((showCardCountThreshold - 1) / 26) * 100}%, #4a5568 100%)`
+                                }}
+                              />
+                              <div className="text-xs text-gray-300 min-w-[35px] text-right font-medium">
+                                {showCardCountThreshold}
+                              </div>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-400">
+                              范围：1-27（一副牌最多27张）
                             </div>
                           </div>
                         </div>

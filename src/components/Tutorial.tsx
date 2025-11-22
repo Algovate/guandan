@@ -63,12 +63,20 @@ export default function Tutorial() {
             onClick={toggleTutorial}
           />
           <motion.div
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-3xl max-h-[85vh] overflow-y-auto mx-4 p-4"
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
           >
+            <motion.div
+              className="w-full max-w-3xl max-h-[85vh] overflow-y-auto"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
+            >
             <div className="glass rounded-3xl shadow-2xl border-2 border-accent-gold/40 p-8 relative overflow-hidden"
               style={{
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
@@ -80,10 +88,10 @@ export default function Tutorial() {
               
               <div className="relative z-10">
                 {/* 标题 */}
-                <div className="flex justify-between items-center mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="text-5xl">📖</div>
-                    <h2 className="text-4xl font-display font-bold bg-gradient-to-r from-accent-gold to-accent-amber bg-clip-text text-transparent">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="text-3xl sm:text-4xl md:text-5xl flex-shrink-0">📖</div>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-accent-gold to-accent-amber bg-clip-text text-transparent break-words min-w-0">
                       掼蛋游戏规则
                     </h2>
                   </div>
@@ -91,7 +99,7 @@ export default function Tutorial() {
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={toggleTutorial}
-                    className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 text-2xl font-bold transition-colors"
+                    className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 text-2xl font-bold transition-colors flex-shrink-0"
                   >
                     ×
                   </motion.button>
@@ -142,6 +150,7 @@ export default function Tutorial() {
                 </motion.button>
               </div>
             </div>
+            </motion.div>
           </motion.div>
         </>
       )}
