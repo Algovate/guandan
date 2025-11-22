@@ -254,6 +254,8 @@ export class DecisionExplainer {
             [PlayType.PAIR]: '对子',
             [PlayType.TRIPLE]: '三张',
             [PlayType.TRIPLE_WITH_PAIR]: '三带二',
+            [PlayType.TRIPLE_PAIR]: '三连对',
+            [PlayType.PLATE]: '钢板',
             [PlayType.STRAIGHT]: '顺子',
             [PlayType.STRAIGHT_FLUSH]: '同花顺',
             [PlayType.BOMB]: '炸弹',

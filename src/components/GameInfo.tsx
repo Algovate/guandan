@@ -43,7 +43,13 @@ export default function GameInfo() {
             {gameState.mainSuit && gameState.mainRank ? (
               <>
                 <div className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-inner flex items-center justify-center`}>
-                  <div className="w-6 h-6 md:w-8 md:h-8">
+                  <div 
+                    className={`w-6 h-6 md:w-8 md:h-8 ${
+                      gameState.mainSuit === 'heart' || gameState.mainSuit === 'diamond' 
+                        ? 'text-red-500' 
+                        : 'text-white'
+                    }`}
+                  >
                     <SuitIcon suit={gameState.mainSuit as any} />
                   </div>
                 </div>
