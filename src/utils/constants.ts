@@ -1,9 +1,8 @@
 import type { Level } from '../game/types';
 import { Rank, Suit } from '../game/types';
 
-// 牌值顺序（从小到大）
+// 牌值顺序（从小到大，A最大）
 export const RANK_ORDER: Rank[] = [
-  Rank.ACE,
   Rank.TWO,
   Rank.THREE,
   Rank.FOUR,
@@ -16,6 +15,7 @@ export const RANK_ORDER: Rank[] = [
   Rank.JACK,
   Rank.QUEEN,
   Rank.KING,
+  Rank.ACE,
   Rank.JOKER_SMALL,
   Rank.JOKER_BIG,
 ];

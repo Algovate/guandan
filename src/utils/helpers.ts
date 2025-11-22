@@ -34,28 +34,40 @@ export function compareCards(
   if (card1IsSmallJoker && !card2IsBigJoker) return 1;
   if (card2IsSmallJoker && !card1IsBigJoker) return -1;
 
-  // 主牌大于副牌
-  const isCard1Main = mainRank && card1.rank === mainRank;
-  const isCard2Main = mainRank && card2.rank === mainRank;
-  if (isCard1Main && !isCard2Main) return 1;
-  if (!isCard1Main && isCard2Main) return -1;
+  // 级牌（Level Card）处理
+  // 掼蛋规则：红桃级牌 > 其他级牌 > 主花色牌 > 普通牌
+  const isCard1Level = mainRank && card1.rank === mainRank;
+  const isCard2Level = mainRank && card2.rank === mainRank;
 
-  // 红桃主牌特殊规则
-  if (mainSuit === Suit.HEART) {
-    const isCard1RedHeart = card1.suit === Suit.HEART && card1.rank === mainRank;
-    const isCard2RedHeart = card2.suit === Suit.HEART && card2.rank === mainRank;
-    if (isCard1RedHeart && !isCard2RedHeart) return 1;
-    if (!isCard1RedHeart && isCard2RedHeart) return -1;
+  // 如果都是级牌
+  if (isCard1Level && isCard2Level) {
+    // 红桃级牌最大（逢人配）
+    if (card1.suit === Suit.HEART && card2.suit !== Suit.HEART) return 1;
+    if (card2.suit === Suit.HEART && card1.suit !== Suit.HEART) return -1;
+    // 其他级牌大小相同（或者按花色排序，通常不区分大小，但为了排序稳定可以按花色）
+    return SUIT_ORDER.indexOf(card1.suit) - SUIT_ORDER.indexOf(card2.suit);
   }
 
-  // 比较牌值
+  // 一个是级牌，一个不是
+  if (isCard1Level && !isCard2Level) return 1;
+  if (!isCard1Level && isCard2Level) return -1;
+
+  // 主花色处理
+  // 如果都不是级牌，检查是否为主花色
+  const isCard1MainSuit = mainSuit && card1.suit === mainSuit;
+  const isCard2MainSuit = mainSuit && card2.suit === mainSuit;
+
+  if (isCard1MainSuit && !isCard2MainSuit) return 1;
+  if (!isCard1MainSuit && isCard2MainSuit) return -1;
+
+  // 都是主花色或都是副牌，比较点数
   const rank1Index = RANK_ORDER.indexOf(card1.rank);
   const rank2Index = RANK_ORDER.indexOf(card2.rank);
   if (rank1Index !== rank2Index) {
     return rank1Index - rank2Index;
   }
 
-  // 牌值相同，比较花色
+  // 点数相同，比较花色
   const suit1Index = SUIT_ORDER.indexOf(card1.suit);
   const suit2Index = SUIT_ORDER.indexOf(card2.suit);
   return suit1Index - suit2Index;
