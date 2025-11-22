@@ -77,33 +77,49 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
           border-2
         `}
       >
-        {/* 玩家头像区域 */}
-        <div className="relative mb-1">
-          <div className={`w-12 h-12 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${teamColor} text-white overflow-hidden`}>
-            {player.avatar ? (
-              <span className="text-2xl" role="img" aria-label="avatar">{player.avatar}</span>
+        {/* 玩家头像区域 - 移除圆形限制，允许更大展示 */}
+        <div className="relative mb-2 group">
+          {/* 背景光晕 */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${teamColor} opacity-20 blur-xl rounded-full group-hover:opacity-40 transition-opacity duration-500`}></div>
+
+          {/* 头像容器 */}
+          <div className={`relative w-28 h-28 flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:-translate-y-2`}>
+            {player.avatarImage ? (
+              <img
+                src={player.avatarImage}
+                alt={player.name}
+                className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/30"
+              />
+            ) : player.avatar ? (
+              <span className="text-7xl filter drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)] transform transition-transform group-hover:rotate-6" role="img" aria-label="avatar">
+                {player.avatar}
+              </span>
             ) : (
-              player.isAI ? <RobotIcon /> : <UserIcon />
+              <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${teamColor} flex items-center justify-center shadow-lg border-2 border-white/30`}>
+                {player.isAI ? <RobotIcon /> : <UserIcon />}
+              </div>
             )}
           </div>
 
-          {/* 队伍标识 - 左下角 */}
-          <div className={`absolute -bottom-1 -left-1 w-5 h-5 rounded-full border border-white shadow-sm flex items-center justify-center text-[10px] font-bold bg-white text-gray-800`}>
+          {/* 队伍标识 - 左下角悬浮 */}
+          <div className={`absolute bottom-0 left-0 w-8 h-8 rounded-lg border-2 border-white/50 shadow-lg flex items-center justify-center text-sm font-bold bg-gradient-to-br ${teamColor} text-white z-10 transform -rotate-6`}>
             {player.team + 1}
           </div>
 
-          {/* 牌数 Badge - 右上角 (Shield Style) */}
-          <div className="absolute -top-2 -right-3 w-7 h-7">
+          {/* 牌数 Badge - 右上角悬浮 */}
+          <div className="absolute top-0 right-0 w-9 h-9 z-20 transform translate-x-2 -translate-y-2">
             <div className="relative w-full h-full flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#3E2723] rounded-full border-2 border-[#D4AF37] shadow-md transform rotate-45"></div>
+              <div className="absolute inset-0 bg-[#3E2723] rounded-lg border-2 border-[#D4AF37] shadow-md transform rotate-12"></div>
               <span className="relative text-white font-bold font-serif text-sm z-10">{cardCount}</span>
             </div>
           </div>
         </div>
 
-        {/* 玩家名称 */}
-        <div className="font-serif font-bold text-casino-wood text-base whitespace-nowrap">
-          {player.name}
+        {/* 玩家名字 - 增强对比度 */}
+        <div className="relative z-10 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-lg transform hover:scale-105 transition-transform">
+          <span className="font-serif font-bold text-white text-lg tracking-wide text-shadow-sm whitespace-nowrap">
+            {player.name}
+          </span>
         </div>
 
         {/* 思考状态 */}

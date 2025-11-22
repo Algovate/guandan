@@ -78,6 +78,7 @@ export interface Player {
   isAI: boolean;
   team: 0 | 1; // 0或1，表示两个队伍
   avatar?: string;
+  avatarImage?: string;
 }
 
 // 游戏阶段

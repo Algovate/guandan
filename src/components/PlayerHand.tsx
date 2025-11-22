@@ -243,14 +243,18 @@ export default function PlayerHand() {
       </div>
 
       {/* User Info Panel */}
-      <div className="absolute bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-3">
-        <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-3 border border-white/20 shadow-lg bg-black/30 backdrop-blur-md">
-          <div className={`w-10 h-10 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700'} text-white overflow-hidden`}>
-            <span className="text-xl" role="img" aria-label="avatar">{player.avatar || '👤'}</span>
+      <div className="absolute bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-4">
+        <div className="glass-panel pl-4 pr-8 py-3 rounded-2xl flex items-center gap-4 border border-white/20 shadow-2xl bg-black/60 backdrop-blur-xl transition-all hover:bg-black/70 hover:scale-105">
+          <div className="relative w-20 h-20 flex items-center justify-center -my-4 -ml-2">
+            {player.avatarImage ? (
+              <img src={player.avatarImage} alt={player.name} className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/30" />
+            ) : (
+              <span className="text-6xl filter drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]" role="img" aria-label="avatar">{player.avatar || '👤'}</span>
+            )}
           </div>
           <div className="flex flex-col">
-            <span className="text-white font-bold font-serif text-sm leading-tight">{player.name}</span>
-            <span className="text-xs text-gray-300 font-serif">队伍 {player.team + 1}</span>
+            <span className="text-white font-bold font-serif text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
+            <span className="text-xs text-gray-300 font-serif uppercase tracking-wider mt-1">队伍 {player.team + 1}</span>
           </div>
         </div>
       </div>
