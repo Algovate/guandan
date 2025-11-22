@@ -116,7 +116,7 @@ export default function PlayerHand() {
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pointer-events-none">
 
       {/* Action Buttons */}
-      <div className="absolute bottom-[280px] z-[300] flex items-center justify-center gap-6 pointer-events-auto">
+      <div className="absolute bottom-[170px] md:bottom-[280px] z-[300] flex items-center justify-center gap-4 md:gap-6 pointer-events-auto scale-90 md:scale-100 origin-bottom">
         {isCurrentPlayer && (
           <>
             <motion.button
@@ -124,7 +124,7 @@ export default function PlayerHand() {
               whileTap={{ scale: 0.95 }}
               onClick={handlePass}
               disabled={!canPass}
-              className="btn-casino-secondary"
+              className="btn-casino-secondary px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
             >
               不出
             </motion.button>
@@ -134,7 +134,7 @@ export default function PlayerHand() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={getHint}
-                className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32]"
+                className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32] px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
               >
                 提示
               </motion.button>
@@ -145,7 +145,7 @@ export default function PlayerHand() {
               whileTap={{ scale: 0.95 }}
               onClick={handlePlay}
               disabled={!canPlay}
-              className="btn-casino-primary"
+              className="btn-casino-primary px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
             >
               出牌
             </motion.button>
@@ -153,14 +153,14 @@ export default function PlayerHand() {
         )}
 
         {!isCurrentPlayer && (
-          <div className="glass-panel text-white/90 px-8 py-3 rounded-full font-bold border border-white/20 shadow-lg tracking-wider">
+          <div className="glass-panel text-white/90 px-6 py-2 md:px-8 md:py-3 rounded-full font-bold border border-white/20 shadow-lg tracking-wider text-sm md:text-base">
             等待其他玩家...
           </div>
         )}
       </div>
 
       {/* Hand Area */}
-      <div className="relative w-full flex justify-center items-end pb-8 px-4 pointer-events-auto" style={{ height: '260px' }}>
+      <div className="relative w-full flex justify-center items-end pb-4 md:pb-8 px-2 md:px-4 pointer-events-auto" style={{ height: isMobile ? '200px' : '260px' }}>
         <div className="relative h-full flex justify-center items-end w-full max-w-5xl">
           <AnimatePresence mode="popLayout">
             {sortedHand.map((card, index) => {
@@ -177,7 +177,7 @@ export default function PlayerHand() {
                   layoutId={`card-${card.id}`}
                   initial={{ y: 200, opacity: 0, scale: 0.8 }}
                   animate={{
-                    y: isSelected ? layout.y - 40 : layout.y,
+                    y: isSelected ? layout.y - (isMobile ? 30 : 40) : layout.y,
                     x: layout.x,
                     rotate: layout.rotate,
                     opacity: 1,
@@ -187,14 +187,14 @@ export default function PlayerHand() {
                   exit={{ y: 200, opacity: 0, transition: { duration: 0.2 } }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   whileHover={{
-                    y: isSelected ? layout.y - 50 : layout.y - 20,
+                    y: isSelected ? layout.y - (isMobile ? 40 : 50) : layout.y - (isMobile ? 10 : 20),
                     scale: 1.1,
                     zIndex: 100,
                     transition: { duration: 0.2 }
                   }}
                   style={{
                     position: 'absolute',
-                    bottom: 20,
+                    bottom: isMobile ? 10 : 20,
                     cursor: 'pointer',
                     transformOrigin: 'center bottom'
                   }}
@@ -215,29 +215,29 @@ export default function PlayerHand() {
       </div>
 
       {/* Controls Footer */}
-      <div className="absolute bottom-6 right-6 flex gap-2 z-50 pointer-events-auto">
+      <div className="absolute bottom-[150px] right-2 md:bottom-6 md:right-6 flex gap-2 z-50 pointer-events-auto">
         <button
           onClick={() => setShowHandDetail(true)}
-          className="bg-black/40 hover:bg-black/60 text-white p-3 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg"
+          className="bg-black/40 hover:bg-black/60 text-white p-2 md:p-3 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg"
           title="View Hand Details"
         >
-          <span className="text-xl">📋</span>
+          <span className="text-lg md:text-xl">📋</span>
         </button>
       </div>
 
       {/* User Info Panel */}
-      <div className="absolute bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-4">
-        <div className="glass-panel pl-4 pr-8 py-3 rounded-2xl flex items-center gap-4 border border-white/20 shadow-2xl bg-black/60 backdrop-blur-xl transition-all hover:bg-black/70 hover:scale-105">
-          <div className="relative w-20 h-20 flex items-center justify-center -my-4 -ml-2">
+      <div className="absolute bottom-[150px] left-2 md:bottom-6 md:left-6 z-50 pointer-events-auto flex items-center gap-4 origin-bottom-left scale-90 md:scale-100">
+        <div className="glass-panel pl-3 pr-6 py-2 md:pl-4 md:pr-8 md:py-3 rounded-2xl flex items-center gap-3 md:gap-4 border border-white/20 shadow-2xl bg-black/60 backdrop-blur-xl transition-all hover:bg-black/70 hover:scale-105">
+          <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center -my-4 -ml-2">
             {player.avatarImage ? (
               <img src={player.avatarImage} alt={player.name} className="w-full h-full object-cover rounded-xl shadow-lg border-2 border-white/30" />
             ) : (
-              <span className="text-6xl filter drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]" role="img" aria-label="avatar">{player.avatar || '👤'}</span>
+              <span className="text-5xl md:text-6xl filter drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]" role="img" aria-label="avatar">{player.avatar || '👤'}</span>
             )}
           </div>
           <div className="flex flex-col">
-            <span className="text-white font-bold font-serif text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
-            <span className="text-xs text-gray-300 font-serif uppercase tracking-wider mt-1">队伍 {player.team + 1}</span>
+            <span className="text-white font-bold font-serif text-lg md:text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
+            <span className="text-[10px] md:text-xs text-gray-300 font-serif uppercase tracking-wider mt-0.5 md:mt-1">队伍 {player.team + 1}</span>
           </div>
         </div>
       </div>

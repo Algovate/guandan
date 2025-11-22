@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { PlayerPosition } from '../game/types';
@@ -6,6 +7,14 @@ import { PLAY_TYPE_NAMES } from '../utils/constants';
 
 export default function PlayArea() {
   const { gameState } = useGameStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!gameState || !gameState.currentPlay) {
     return null;
@@ -24,13 +33,13 @@ export default function PlayArea() {
   const getPositionStyle = (pos: PlayerPosition) => {
     switch (pos) {
       case PlayerPosition.BOTTOM:
-        return "bottom-[35%] left-1/2 -translate-x-1/2"; // 玩家自己：底部上方
+        return "bottom-[55%] md:bottom-[40%] left-1/2 -translate-x-1/2"; // 玩家自己：底部上方 - 提高位置避免遮挡
       case PlayerPosition.TOP:
-        return "top-[32%] left-1/2 -translate-x-1/2"; // 对家：顶部下方
+        return "top-[25%] md:top-[32%] left-1/2 -translate-x-1/2"; // 对家：顶部下方
       case PlayerPosition.LEFT:
-        return "top-1/2 left-[25%] -translate-y-1/2"; // 上家：左侧右方
+        return "top-[40%] md:top-1/2 left-[15%] md:left-[25%] -translate-y-1/2"; // 上家：左侧右方
       case PlayerPosition.RIGHT:
-        return "top-1/2 right-[25%] -translate-y-1/2"; // 下家：右侧左方
+        return "top-[40%] md:top-1/2 right-[15%] md:right-[25%] -translate-y-1/2"; // 下家：右侧左方
       default:
         return "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2";
     }
@@ -66,11 +75,11 @@ export default function PlayArea() {
         }}
       >
         {/* 玩家名字和牌型提示 */}
-        <div className="mb-4 flex items-center gap-3 glass-panel px-4 py-1.5 rounded-full shadow-xl">
-          <span className="text-gold-metallic font-serif font-bold text-base whitespace-nowrap">
+        <div className="mb-2 md:mb-4 flex items-center gap-2 md:gap-3 glass-panel px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-xl scale-90 md:scale-100 origin-bottom">
+          <span className="text-gold-metallic font-serif font-bold text-sm md:text-base whitespace-nowrap">
             {lastPlayer.name}
           </span>
-          <span className="text-white/90 text-xs font-bold px-2 py-0.5 bg-white/10 rounded border border-white/10 tracking-wide">
+          <span className="text-white/90 text-[10px] md:text-xs font-bold px-1.5 py-0.5 bg-white/10 rounded border border-white/10 tracking-wide">
             {PLAY_TYPE_NAMES[play.type] || play.type}
           </span>
         </div>
@@ -82,7 +91,7 @@ export default function PlayArea() {
               key={card.id}
               className="origin-bottom"
               style={{
-                marginLeft: index === 0 ? 0 : '-3rem', // 负 margin 实现重叠
+                marginLeft: index === 0 ? 0 : (isMobile ? '-2rem' : '-3rem'), // 负 margin 实现重叠
                 zIndex: index
               }}
               initial={{
@@ -93,8 +102,8 @@ export default function PlayArea() {
               animate={{
                 opacity: 1,
                 scale: 1,
-                y: Math.abs(index - (play.cards.length - 1) / 2) * 2, // Arc shape
-                rotate: (index - (play.cards.length - 1) / 2) * 3, // Fan spread
+                y: Math.abs(index - (play.cards.length - 1) / 2) * (isMobile ? 1 : 2), // Arc shape
+                rotate: (index - (play.cards.length - 1) / 2) * (isMobile ? 2 : 3), // Fan spread
               }}
               transition={{
                 type: "spring",
@@ -106,7 +115,7 @@ export default function PlayArea() {
               <Card
                 card={card}
                 faceUp={true}
-                size="md"
+                size={isMobile ? "sm" : "md"}
                 className="shadow-2xl ring-1 ring-black/20"
               />
             </motion.div>
