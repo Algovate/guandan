@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import type { Player } from '../game/types';
 import { PlayerPosition } from '../game/types';
-import Card from './Card';
 
 interface AIPlayerProps {
   player: Player;
@@ -39,7 +38,6 @@ const UserIcon = () => (
 
 export default function AIPlayer({ player, position, isCurrentPlayer, isThinking = false }: AIPlayerProps) {
   const cardCount = player.hand.length;
-  const isVertical = position === PlayerPosition.LEFT || position === PlayerPosition.RIGHT;
   const teamColor = player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700';
   
   return (
@@ -72,35 +70,36 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
           borderColor: { duration: 0.3 }
         }}
         className={`
-          panel-classic px-5 py-3
+          panel-classic px-4 py-2
           transition-all duration-300
-          min-w-[140px] flex flex-col items-center
+          min-w-[120px] flex flex-col items-center
           bg-opacity-95 backdrop-blur-sm
           border-2
         `}
       >
         {/* 玩家头像区域 */}
-        <div className="relative mb-2">
+        <div className="relative mb-1">
           <div className={`w-12 h-12 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${teamColor} text-white`}>
             {player.isAI ? <RobotIcon /> : <UserIcon />}
           </div>
-          {/* 队伍标识 */}
-          <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border border-white shadow-sm flex items-center justify-center text-[10px] font-bold bg-white text-gray-800`}>
+          
+          {/* 队伍标识 - 左下角 */}
+          <div className={`absolute -bottom-1 -left-1 w-5 h-5 rounded-full border border-white shadow-sm flex items-center justify-center text-[10px] font-bold bg-white text-gray-800`}>
             {player.team + 1}
+          </div>
+
+          {/* 牌数 Badge - 右上角 (Shield Style) */}
+          <div className="absolute -top-2 -right-3 w-7 h-7">
+             <div className="relative w-full h-full flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#3E2723] rounded-full border-2 border-[#D4AF37] shadow-md transform rotate-45"></div>
+                <span className="relative text-white font-bold font-serif text-sm z-10">{cardCount}</span>
+             </div>
           </div>
         </div>
 
         {/* 玩家名称 */}
-        <div className="font-serif font-bold text-casino-wood text-lg mb-1 whitespace-nowrap">
+        <div className="font-serif font-bold text-casino-wood text-base whitespace-nowrap">
           {player.name}
-        </div>
-        
-        {/* 牌数显示 */}
-        <div className="flex items-center gap-2 bg-black/10 px-3 py-1 rounded-full w-full justify-center border border-black/5">
-          <div className="text-lg">🂠</div>
-          <div className="text-sm font-bold text-gray-700">
-            <span className="font-serif text-lg">{cardCount}</span>
-          </div>
         </div>
         
         {/* 思考状态 */}
@@ -134,39 +133,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
         )}
       </motion.div>
       
-      {/* 手牌预览（背面） */}
-      <div className={`flex gap-1.5 ${isVertical ? 'flex-col' : 'flex-row'}`}>
-        {Array.from({ length: Math.min(cardCount, 6) }).map((_, i) => {
-          const dummyCard = { 
-            suit: 'spade' as const, 
-            rank: 'A' as const, 
-            id: `dummy-${player.id}-${i}` 
-          };
-          return (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.8, y: isVertical ? -10 : 0, x: isVertical ? 0 : -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-              transition={{ delay: i * 0.1, type: "spring" }}
-            >
-              <Card
-                card={dummyCard}
-                size="sm"
-                faceUp={false}
-              />
-            </motion.div>
-          );
-        })}
-        {cardCount > 6 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center text-white font-serif font-bold text-sm bg-black/30 rounded-lg px-2 py-1 backdrop-blur-sm border border-white/20"
-          >
-            +{cardCount - 6}
-          </motion.div>
-        )}
-      </div>
+      {/* 手牌预览（背面）已移除，使用 Badge 显示数量 */}
     </motion.div>
   );
 }
