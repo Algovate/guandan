@@ -115,53 +115,11 @@ export default function PlayerHand() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pointer-events-none">
 
-      {/* Action Buttons */}
-      <div className="absolute bottom-[280px] md:bottom-[380px] z-[300] flex items-center justify-center gap-4 md:gap-6 pointer-events-auto scale-90 md:scale-100 origin-bottom">
-        {isCurrentPlayer && (
-          <>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handlePass}
-              disabled={!canPass}
-              className="btn-casino-secondary px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
-            >
-              不出
-            </motion.button>
-
-            {gameMode === GameMode.TEACHING && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={getHint}
-                className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32] px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
-              >
-                提示
-              </motion.button>
-            )}
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handlePlay}
-              disabled={!canPlay}
-              className="btn-casino-primary px-6 py-2 md:px-8 md:py-3 text-sm md:text-base"
-            >
-              出牌
-            </motion.button>
-          </>
-        )}
-
-        {!isCurrentPlayer && (
-          <div className="glass-panel text-white/90 px-6 py-2 md:px-8 md:py-3 rounded-full font-bold border border-white/20 shadow-lg tracking-wider text-sm md:text-base">
-            等待其他玩家...
-          </div>
-        )}
-      </div>
-
-      {/* Hand Area */}
-      <div className="relative w-full flex justify-center items-end pb-4 md:pb-8 px-2 md:px-4 pointer-events-auto mb-20 md:mb-24" style={{ height: isMobile ? '240px' : '300px' }}>
-        <div className="relative h-full flex justify-center items-end w-full max-w-5xl">
+      {/* Hand Area with Buttons */}
+      <div className="relative w-full flex flex-col justify-end items-center px-2 md:px-4 pointer-events-auto mb-20 md:mb-24 pb-2 md:pb-4" style={{ minHeight: isMobile ? '320px' : '400px' }}>
+        {/* Hand Cards Area */}
+        <div className="relative w-full flex justify-center items-end flex-1 mb-2 md:mb-3" style={{ height: isMobile ? '240px' : '300px' }}>
+          <div className="relative h-full flex justify-center items-end w-full max-w-5xl">
           <AnimatePresence mode="popLayout">
             {sortedHand.map((card, index) => {
               const isSelected = selectedCards.some(c => c.id === card.id);
@@ -177,19 +135,21 @@ export default function PlayerHand() {
                   layoutId={`card-${card.id}`}
                   initial={{ y: 200, opacity: 0, scale: 0.8 }}
                   animate={{
-                    y: isSelected ? layout.y - (isMobile ? 30 : 40) : layout.y,
-                    x: layout.x,
+                    y: isSelected ? layout.y - (isMobile ? 15 : 20) : layout.y,
+                    x: isSelected ? layout.x * 0.95 : layout.x,
                     rotate: layout.rotate,
                     opacity: 1,
                     scale: 1,
-                    zIndex: layout.zIndex + (isSelected ? 100 : 0)
+                    zIndex: layout.zIndex
                   }}
                   exit={{ y: 200, opacity: 0, transition: { duration: 0.2 } }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
                   whileHover={{
-                    y: isSelected ? layout.y - (isMobile ? 40 : 50) : layout.y - (isMobile ? 10 : 20),
+                    y: isSelected 
+                      ? layout.y - (isMobile ? 20 : 25) 
+                      : layout.y - (isMobile ? 10 : 20),
                     scale: 1.1,
-                    zIndex: 100,
+                    zIndex: layout.zIndex + 20,
                     transition: { duration: 0.2 }
                   }}
                   style={{
@@ -211,6 +171,51 @@ export default function PlayerHand() {
               );
             })}
           </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Action Buttons - 放置在 hand area 底部 */}
+        <div className="relative z-[300] flex items-center justify-center gap-3 md:gap-4 pointer-events-auto scale-90 md:scale-100 origin-center mt-2 md:mt-3">
+          {isCurrentPlayer && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handlePass}
+                disabled={!canPass}
+                className="btn-casino-secondary px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base"
+              >
+                不出
+              </motion.button>
+
+              {gameMode === GameMode.TEACHING && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={getHint}
+                  className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32] px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base"
+                >
+                  提示
+                </motion.button>
+              )}
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handlePlay}
+                disabled={!canPlay}
+                className="btn-casino-primary px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base"
+              >
+                出牌
+              </motion.button>
+            </>
+          )}
+
+          {!isCurrentPlayer && (
+            <div className="glass-panel text-white/90 px-5 py-2 md:px-6 md:py-2.5 rounded-full font-bold border border-white/20 shadow-lg tracking-wider text-sm md:text-base">
+              等待其他玩家...
+            </div>
+          )}
         </div>
       </div>
 

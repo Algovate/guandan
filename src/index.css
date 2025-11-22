@@ -85,6 +85,11 @@
     pointer-events: none;
   }
 
+  /* 选中状态下移除 glossy finish 效果，避免左上角变淡 */
+  .card-face.selected::after {
+    opacity: 0;
+  }
+
   .card-face:hover {
     @apply border-gray-400;
     /* 悬停时的增强阴影和3D效果 */
@@ -95,12 +100,12 @@
   }
 
   .card-face.selected {
-    @apply border-[#d4af37];
-    @apply ring-2 ring-[#d4af37] ring-offset-2 ring-offset-transparent;
-    /* 选中时的强烈阴影和光晕 */
+    /* 选中时的阴影 */
     box-shadow:
-      0 20px 30px -5px rgba(0, 0, 0, 0.4),
-      0 0 15px rgba(212, 175, 55, 0.3);
+      0 20px 30px -5px rgba(0, 0, 0, 0.4);
+    /* 增强选中状态的视觉反馈 - 不使用brightness避免左上角变淡 */
+    transform: scale(1.02);
+    filter: contrast(1.05) saturate(1.1);
   }
 
   .card-back {
