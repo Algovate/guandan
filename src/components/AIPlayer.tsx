@@ -39,15 +39,15 @@ const UserIcon = () => (
 export default function AIPlayer({ player, position, isCurrentPlayer, isThinking = false }: AIPlayerProps) {
   const cardCount = player.hand.length;
   const teamColor = player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700';
-  
+
   return (
     <motion.div
       className={`absolute ${positionClasses[position]} flex items-center gap-3 z-30`}
       style={positionStyles[position]}
-      animate={isCurrentPlayer ? { 
+      animate={isCurrentPlayer ? {
         scale: 1.05,
-      } : { 
-        scale: 1 
+      } : {
+        scale: 1
       }}
       transition={{ duration: 0.3, type: "spring" }}
     >
@@ -65,7 +65,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
           boxShadow: "0 10px 20px rgba(0,0,0,0.3)",
           borderColor: "rgba(212,175,55,0.3)" // default border color
         }}
-        transition={{ 
+        transition={{
           boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" },
           borderColor: { duration: 0.3 }
         }}
@@ -79,10 +79,14 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
       >
         {/* 玩家头像区域 */}
         <div className="relative mb-1">
-          <div className={`w-12 h-12 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${teamColor} text-white`}>
-            {player.isAI ? <RobotIcon /> : <UserIcon />}
+          <div className={`w-12 h-12 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${teamColor} text-white overflow-hidden`}>
+            {player.avatar ? (
+              <span className="text-2xl" role="img" aria-label="avatar">{player.avatar}</span>
+            ) : (
+              player.isAI ? <RobotIcon /> : <UserIcon />
+            )}
           </div>
-          
+
           {/* 队伍标识 - 左下角 */}
           <div className={`absolute -bottom-1 -left-1 w-5 h-5 rounded-full border border-white shadow-sm flex items-center justify-center text-[10px] font-bold bg-white text-gray-800`}>
             {player.team + 1}
@@ -90,10 +94,10 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
 
           {/* 牌数 Badge - 右上角 (Shield Style) */}
           <div className="absolute -top-2 -right-3 w-7 h-7">
-             <div className="relative w-full h-full flex items-center justify-center">
-                <div className="absolute inset-0 bg-[#3E2723] rounded-full border-2 border-[#D4AF37] shadow-md transform rotate-45"></div>
-                <span className="relative text-white font-bold font-serif text-sm z-10">{cardCount}</span>
-             </div>
+            <div className="relative w-full h-full flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#3E2723] rounded-full border-2 border-[#D4AF37] shadow-md transform rotate-45"></div>
+              <span className="relative text-white font-bold font-serif text-sm z-10">{cardCount}</span>
+            </div>
           </div>
         </div>
 
@@ -101,7 +105,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
         <div className="font-serif font-bold text-casino-wood text-base whitespace-nowrap">
           {player.name}
         </div>
-        
+
         {/* 思考状态 */}
         {isThinking && (
           <motion.div
@@ -120,7 +124,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
             </div>
           </motion.div>
         )}
-        
+
         {/* 当前玩家指示 */}
         {isCurrentPlayer && !isThinking && (
           <motion.div
@@ -132,7 +136,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
           </motion.div>
         )}
       </motion.div>
-      
+
       {/* 手牌预览（背面）已移除，使用 Badge 显示数量 */}
     </motion.div>
   );

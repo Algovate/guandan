@@ -52,35 +52,39 @@ export class GameStateManager {
     return [
       {
         id: generateId(),
-        name: 'AI玩家1',
+        name: '诸葛亮',
         position: PlayerPosition.TOP,
         hand: [],
         isAI: true,
         team: 0,
+        avatar: '🧙‍♂️'
       },
       {
         id: generateId(),
-        name: 'AI玩家2',
+        name: '曹操',
         position: PlayerPosition.LEFT,
         hand: [],
         isAI: true,
         team: 1,
+        avatar: '😈'
       },
       {
         id: generateId(),
-        name: 'AI玩家3',
+        name: '孙权',
         position: PlayerPosition.RIGHT,
         hand: [],
         isAI: true,
         team: 1,
+        avatar: '🦁'
       },
       {
         id: generateId(),
-        name: '玩家',
+        name: '刘备',
         position: PlayerPosition.BOTTOM,
         hand: [],
         isAI: false,
         team: 0,
+        avatar: '👑'
       },
     ];
   }

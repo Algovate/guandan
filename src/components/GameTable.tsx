@@ -11,13 +11,50 @@ import { PlayerPosition, GamePhase } from '../game/types';
 export default function GameTable() {
   const { gameState, initGame, startGame, toastMessage, clearSelection } = useGameStore();
 
-  // ... (useEffect hooks remain same)
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
+
+  useEffect(() => {
+    if (gameState?.phase === GamePhase.WAITING) {
+      const timer = setTimeout(() => {
+        startGame();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [gameState?.phase, startGame]);
 
   if (!gameState) {
-    // ... (loading screen remains same)
     return (
       <div className="min-h-screen texture-felt flex items-center justify-center relative overflow-hidden">
-        {/* ... */}
+        {/* 加载动画背景 */}
+        <div className="absolute inset-0 bg-black/40" />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative z-10 flex flex-col items-center"
+        >
+          <div className="text-gold-metallic text-5xl font-serif font-bold flex items-center gap-6 mb-6 drop-shadow-2xl">
+            <motion.div
+              animate={{ rotateY: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="text-6xl"
+            >
+              ♠
+            </motion.div>
+            <span className="tracking-[0.2em]">CASINO GUANDAN</span>
+            <motion.div
+              animate={{ rotateY: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+              className="text-6xl"
+            >
+              ♥
+            </motion.div>
+          </div>
+          <div className="text-white/60 font-serif italic tracking-widest text-lg">正在准备牌桌...</div>
+        </motion.div>
       </div>
     );
   }
@@ -106,16 +143,16 @@ export default function GameTable() {
             </motion.div>
 
             <h2 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-gold-metallic">
-              {gameState.teamScores[0] > gameState.teamScores[1] ? 'TEAM ONE WINS' : 'TEAM TWO WINS'}
+              {gameState.teamScores[0] > gameState.teamScores[1] ? '我方获胜' : '对方获胜'}
             </h2>
 
             <div className="mb-10 mt-4 w-full space-y-4">
               <div className="flex justify-between items-center border-b border-white/10 pb-4 text-xl">
-                <span className="font-serif text-gray-300">Team One</span>
+                <span className="font-serif text-gray-300">我方队伍</span>
                 <span className="font-bold text-gold-metallic text-3xl">{gameState.teamScores[0]}</span>
               </div>
               <div className="flex justify-between items-center pt-2 text-xl">
-                <span className="font-serif text-gray-300">Team Two</span>
+                <span className="font-serif text-gray-300">对方队伍</span>
                 <span className="font-bold text-silver-metallic text-3xl">{gameState.teamScores[1]}</span>
               </div>
             </div>
@@ -129,7 +166,7 @@ export default function GameTable() {
               }}
               className="btn-casino-primary text-xl px-12 py-4 shadow-2xl"
             >
-              PLAY AGAIN
+              再来一局
             </motion.button>
           </motion.div>
         </motion.div>

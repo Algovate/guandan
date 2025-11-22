@@ -5,6 +5,19 @@ import type { Card } from '../game/types';
 /**
  * 调试面板 - 显示所有玩家手牌和出牌历史
  */
+const PHASE_NAMES: Record<string, string> = {
+    'preparing': '准备中',
+    'playing': '进行中',
+    'ended': '已结束'
+};
+
+const POS_NAMES: Record<string, string> = {
+    'top': '对家',
+    'bottom': '本家',
+    'left': '上家',
+    'right': '下家'
+};
+
 export default function DebugPanel() {
     const { gameState, showDebug, toggleDebug } = useGameStore();
 
@@ -38,7 +51,7 @@ export default function DebugPanel() {
                 className="fixed top-4 right-20 md:right-32 z-50 btn-casino-secondary px-4 py-2 text-xs md:text-sm shadow-lg flex items-center gap-2"
             >
                 <span>{showDebug ? '🚫' : '🔍'}</span>
-                <span className="hidden md:inline">{showDebug ? 'HIDE DEBUG' : 'DEBUG MODE'}</span>
+                <span className="hidden md:inline">{showDebug ? '隐藏调试' : '调试模式'}</span>
             </motion.button>
 
             {/* 调试面板 */}
@@ -52,37 +65,47 @@ export default function DebugPanel() {
                     >
                         <div className="p-4 border-b border-white/10 bg-black/20">
                             <h2 className="text-lg font-bold text-gold-metallic flex items-center gap-2">
-                                🔍 DEBUG CONSOLE
+                                🔍 调试控制台
                             </h2>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
                             {/* 游戏状态 */}
                             <div className="bg-black/30 rounded-xl p-4 border border-white/5">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Game State</h3>
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">游戏状态</h3>
                                 <div className="grid grid-cols-2 gap-2 text-sm">
-                                    <div className="text-gray-400">Phase:</div>
-                                    <div className="text-white font-mono">{gameState.phase}</div>
-                                    <div className="text-gray-400">Trump:</div>
-                                    <div className="text-gold-metallic font-mono font-bold">
-                                        {gameState.mainRank || '-'} {gameState.mainSuit || ''}
+                                    <div className="text-gray-400">阶段:</div>
+                                    <div className="text-white font-mono">
+                                        {PHASE_NAMES[gameState.phase] || gameState.phase}
                                     </div>
-                                    <div className="text-gray-400">Level:</div>
+                                    <div className="text-gray-400">主牌:</div>
+                                    <div className="text-gold-metallic font-mono font-bold">
+                                        {gameState.mainRank || '-'} {
+                                            gameState.mainSuit ? {
+                                                'spade': '♠',
+                                                'heart': '♥',
+                                                'club': '♣',
+                                                'diamond': '♦',
+                                                'joker': '🃏'
+                                            }[gameState.mainSuit] : ''
+                                        }
+                                    </div>
+                                    <div className="text-gray-400">级数:</div>
                                     <div className="text-white font-mono">{gameState.level}</div>
-                                    <div className="text-gray-400">Scores:</div>
+                                    <div className="text-gray-400">比分:</div>
                                     <div className="text-white font-mono">[{gameState.teamScores[0]}, {gameState.teamScores[1]}]</div>
                                 </div>
                             </div>
 
                             {/* 所有玩家手牌 */}
                             <div className="space-y-4">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Player Hands</h3>
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">玩家手牌</h3>
                                 {gameState.players.map((player, index) => (
                                     <div
                                         key={player.id}
                                         className={`rounded-xl p-3 border ${index === gameState.currentPlayerIndex
-                                                ? 'bg-[#d4af37]/10 border-[#d4af37]/50'
-                                                : 'bg-black/30 border-white/5'
+                                            ? 'bg-[#d4af37]/10 border-[#d4af37]/50'
+                                            : 'bg-black/30 border-white/5'
                                             }`}
                                     >
                                         <div className="flex items-center justify-between mb-2">
@@ -91,7 +114,9 @@ export default function DebugPanel() {
                                                     {player.name}
                                                 </span>
                                                 <span className="text-xs text-gray-500">
-                                                    ({player.position})
+                                                    ({
+                                                        POS_NAMES[player.position] || player.position
+                                                    })
                                                 </span>
                                                 {player.isAI && (
                                                     <span className="text-[10px] bg-blue-900/50 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
@@ -100,7 +125,7 @@ export default function DebugPanel() {
                                                 )}
                                             </div>
                                             <span className="text-xs text-gray-400 font-mono">
-                                                {player.hand.length} cards
+                                                {player.hand.length} 张
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap">
@@ -113,7 +138,7 @@ export default function DebugPanel() {
                             {/* 出牌历史 */}
                             {gameState.playHistory && gameState.playHistory.length > 0 && (
                                 <div className="space-y-3">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Play History</h3>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">出牌记录</h3>
                                     <div className="space-y-2">
                                         {[...gameState.playHistory].reverse().map((play, index) => (
                                             <div key={index} className="bg-black/30 rounded-lg p-2 border border-white/5">

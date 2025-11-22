@@ -1,6 +1,7 @@
 import type { Card } from '../types';
 import { Rank, Suit, PlayType } from '../types';
 
+
 export interface HandScore {
   totalScore: number;
   bombCount: number;
@@ -33,39 +34,71 @@ export class HandEvaluator {
       }
     });
 
-    // 2. Structure Scoring (Simplified)
-    // Find bombs
+    // 2. Structure Scoring (Enhanced)
+    // We use findPossiblePlays to detect structures, but we need to be careful not to double count.
+    // A simple approach is to detect "best" non-overlapping structures.
+    // For performance, we'll do a simplified structural analysis.
+
     const rankGroups = new Map<Rank, number>();
     hand.forEach(c => {
       rankGroups.set(c.rank, (rankGroups.get(c.rank) || 0) + 1);
     });
 
+    // Bombs
     rankGroups.forEach((count) => {
       if (count >= 4) {
         bombCount++;
-        score += 20 * (count - 3); // 4 cards = 20, 5 cards = 40
+        score += 30 * (count - 3); // Increased bomb value
         structure.push(PlayType.BOMB);
       }
     });
-    
-    // Check for 4 Kings (King Bomb)
+
+    // King Bomb
     const bigJokers = hand.filter(c => c.rank === Rank.JOKER_BIG).length;
     const smallJokers = hand.filter(c => c.rank === Rank.JOKER_SMALL).length;
     if (bigJokers + smallJokers === 4) {
-        bombCount++; // Super bomb
-        score += 100;
-        structure.push(PlayType.FOUR_KINGS);
+      bombCount++;
+      score += 150; // Massive value
+      structure.push(PlayType.FOUR_KINGS);
     }
 
+    // Triples
+    rankGroups.forEach((count) => {
+      if (count === 3) {
+        score += 10;
+        structure.push(PlayType.TRIPLE);
+      }
+    });
+
+    // Pairs
+    rankGroups.forEach((count) => {
+      if (count === 2) {
+        score += 4;
+        structure.push(PlayType.PAIR);
+      }
+    });
+
+    // Straights (Simplified detection)
+    // This is hard to do perfectly without a full solver, but we can give a bonus for connected cards
+    // ... (omitted for performance, relying on base card values and groups)
+
     // Bonus for having many trumps
-    const trumpCount = hand.filter(c => 
-      (mainRank && c.rank === mainRank) || 
-      (mainSuit && c.suit === mainSuit) || 
-      c.rank === Rank.JOKER_BIG || 
+    const trumpCount = hand.filter(c =>
+      (mainRank && c.rank === mainRank) ||
+      (mainSuit && c.suit === mainSuit) ||
+      c.rank === Rank.JOKER_BIG ||
       c.rank === Rank.JOKER_SMALL
     ).length;
-    
-    score += trumpCount * 2;
+
+    score += trumpCount * 3;
+
+    // Penalty for single small cards (orphan cards)
+    // Cards < 10 that are singles
+    rankGroups.forEach((count, rank) => {
+      if (count === 1 && this.getRankBaseValue(rank) < 2) { // < 10
+        score -= 5;
+      }
+    });
 
     return {
       totalScore: score,
@@ -81,7 +114,7 @@ export class HandEvaluator {
   private static getCardValue(card: Card, mainRank?: Rank, mainSuit?: Suit): number {
     if (card.rank === Rank.JOKER_BIG) return 15;
     if (card.rank === Rank.JOKER_SMALL) return 12;
-    
+
     // Level Cards
     if (mainRank && card.rank === mainRank) {
       if (card.suit === Suit.HEART) return 10; // Heart Level
@@ -90,8 +123,8 @@ export class HandEvaluator {
 
     // Main Suit (Non-Level)
     if (mainSuit && card.suit === mainSuit) {
-        // Main suit cards are slightly better than normal
-        return this.getRankBaseValue(card.rank) + 2;
+      // Main suit cards are slightly better than normal
+      return this.getRankBaseValue(card.rank) + 2;
     }
 
     return this.getRankBaseValue(card.rank);

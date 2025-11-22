@@ -191,35 +191,30 @@ export class StrategyEngine {
   }
 
   /**
-   * 处理对手出牌
+   * 处理对手出牌 - 增强版：基于价值评估
    */
   private static handleOpponentPlay(
     player: Player,
     gameState: GameState,
     _lastPlay: Play,
     beatingPlays: Play[],
-    handScore: any,
+    _handScore: any,
     personality: AIPersonality,
     difficulty: AIDifficulty
   ): Card[] | null {
     const { hand } = player;
     const { mainRank, mainSuit } = gameState;
-    const playerIndex = gameState.players.findIndex(p => p.id === player.id);
+
     const opponentIndex = gameState.lastPlayPlayerIndex;
 
-    // 排序：从小到大
-    beatingPlays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
-
-    // 检查炸弹时机
+    // 1. 检查炸弹时机
     const bombPlays = beatingPlays.filter(p =>
       p.type === PlayType.BOMB || p.type === PlayType.FOUR_KINGS
     );
 
     if (bombPlays.length > 0 && this.probabilityAnalyzer) {
       const shouldBomb = this.probabilityAnalyzer.shouldUseBomb(gameState, player, bombPlays[0]);
-
       if (shouldBomb) {
-        // 根据性格调整炸弹决策
         const bombThreshold = personality.bombThreshold;
         if (Math.random() > bombThreshold) {
           return bombPlays[0].cards;
@@ -227,54 +222,62 @@ export class StrategyEngine {
       }
     }
 
-    // 过滤掉炸弹，看是否有普通牌能压
+    // 2. 过滤掉炸弹，看是否有普通牌能压
     const normalPlays = beatingPlays.filter(p =>
       p.type !== PlayType.BOMB && p.type !== PlayType.FOUR_KINGS
     );
 
     if (normalPlays.length === 0) {
-      // 只have炸弹能压，但不值得用
-      return null;
+      return null; // 只有炸弹，且前面决定不炸
     }
 
-    // 使用概率分析评估风险
-    if (this.probabilityAnalyzer && difficulty === AIDifficulty.HARD) {
-      const riskAssessment = this.probabilityAnalyzer.evaluatePlayRisk(
-        normalPlays[0],
-        gameState,
-        playerIndex
-      );
+    // 3. 对手即将走完，必须压制 (Top Priority)
+    const opponentHandCount = this.cardTracker?.getPlayerCardCount(opponentIndex) || 999;
+    if (opponentHandCount <= 5) { // 阈值提高到5
+      normalPlays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
+      return normalPlays[0].cards; // 出最小的能管上的
+    }
 
-      // 根据性格和风险评估决策
-      if (!riskAssessment.shouldPlay) {
-        // 高风险且不建议出牌
-        if (personality.riskTolerance < 0.5) {
-          return null; // 保守型不出
+    // 4. 基于价值评估的决策 (Value-Based Decision)
+    // 我们不仅看出的牌小不小，还要看剩下的牌好不好
+    if (difficulty === AIDifficulty.HARD || difficulty === AIDifficulty.MEDIUM) {
+      let bestPlay: Play | null = null;
+      let maxValue = -Infinity;
+
+      // 评估当前手牌价值
+      const currentHandValue = HandEvaluator.evaluate(hand, mainRank || undefined, mainSuit || undefined).totalScore;
+
+      for (const play of normalPlays) {
+        // 模拟出牌后的剩余手牌
+        const remainingHand = hand.filter(c => !play.cards.some(pc => pc.id === c.id));
+        const remainingScore = HandEvaluator.evaluate(remainingHand, mainRank || undefined, mainSuit || undefined).totalScore;
+
+        // 计算出牌的"代价" (Cost) = 当前价值 - 剩余价值
+        // 我们希望代价越小越好，或者说剩余价值越高越好
+        // 同时也要考虑出的牌本身的大小，避免用大牌管小牌 (Overkill)
+
+        // 简单的价值函数：剩余价值 - (出牌溢出价值 * 0.5)
+        // 这里简化为：最大化剩余价值
+
+        if (remainingScore > maxValue) {
+          maxValue = remainingScore;
+          bestPlay = play;
         }
       }
-    }
 
-    // 对手即将走完，必须压制
-    const opponentHandCount = this.cardTracker?.getPlayerCardCount(opponentIndex) || 999;
-    if (opponentHandCount <= 3) {
-      return normalPlays[0].cards;
-    }
-
-    // 根据性格决策
-    if (personality.type === PersonalityType.AGGRESSIVE) {
-      // 激进：倾向于压牌
-      if (personality.aggressiveness > Math.random()) {
-        return normalPlays[0].cards;
+      if (bestPlay) {
+        // 如果最佳出牌会导致手牌结构严重破坏（价值大幅下降），且不是必须管，可以选择过牌
+        // 比如为了管一个对3，拆了三个K
+        const cost = currentHandValue - maxValue;
+        if (cost > 20 && personality.type !== PersonalityType.AGGRESSIVE) { // 阈值可调
+          return null;
+        }
+        return bestPlay.cards;
       }
-    } else if (personality.type === PersonalityType.CONSERVATIVE) {
-      // 保守：只在有明显优势时出
-      if (handScore.totalScore > 70 || hand.length < 8) {
-        return normalPlays[0].cards;
-      }
-      return null;
     }
 
-    // 默认：出小牌
+    // 5. 默认逻辑 (Fallback for Easy mode or failure)
+    normalPlays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
     return normalPlays[0].cards;
   }
 

@@ -72,6 +72,8 @@ export const PLAY_TYPE_NAMES: Record<string, string> = {
   pair: '对子',
   triple: '三张',
   triple_with_pair: '三带二',
+  plate: '钢板',
+  tube: '连对',
   straight: '顺子',
   straight_flush: '同花顺',
   bomb: '炸弹',

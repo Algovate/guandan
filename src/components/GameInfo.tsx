@@ -29,7 +29,7 @@ export default function GameInfo() {
               </span>
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Level</span>
+              <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">等级</span>
               <span className="text-sm font-bold text-gold-metallic tracking-wide">当前级牌</span>
             </div>
           </div>
@@ -47,14 +47,14 @@ export default function GameInfo() {
                   </div>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Trump</span>
+                  <span className="text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">主牌</span>
                   <span className="text-sm font-bold text-white font-serif">
                     {RANK_NAMES[gameState.mainRank]}
                   </span>
                 </div>
               </>
             ) : (
-              <div className="text-gray-400 text-xs font-serif italic px-2">NO TRUMP</div>
+              <div className="text-gray-400 text-xs font-serif italic px-2">无主牌</div>
             )}
           </div>
         </motion.div>
@@ -73,7 +73,7 @@ export default function GameInfo() {
           className="glass-panel px-5 py-3 flex items-center gap-4 rounded-2xl"
         >
           <div className="flex flex-col items-center">
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Team 1</div>
+            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">我方</div>
             <div className="w-10 h-10 bg-[#1A237E] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
               <span className="text-white text-lg font-bold font-serif relative z-10">{gameState.teamScores[0]}</span>
@@ -83,7 +83,7 @@ export default function GameInfo() {
           <div className="text-gold-metallic text-xl font-serif italic font-bold px-1 pt-4">vs</div>
 
           <div className="flex flex-col items-center">
-            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Team 2</div>
+            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">对方</div>
             <div className="w-10 h-10 bg-[#B71C1C] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
               <span className="text-white text-lg font-bold font-serif relative z-10">{gameState.teamScores[1]}</span>

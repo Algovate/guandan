@@ -1,5 +1,6 @@
 import type { Card, GameState, Play } from '../types';
-import { findPossiblePlays } from '../CardTypes';
+import { findPossiblePlays, comparePlays } from '../CardTypes';
+import { HandEvaluator } from './HandEvaluator';
 
 /**
  * MCTS树节点
@@ -19,8 +20,8 @@ interface MCTSNode {
  */
 export class MCTSEngine {
     private explorationConstant = 1.414; // UCB1常数 (√2)
-    private maxIterations = 100;  // 最大迭代次数
-    private maxDepth = 10;        // 最大搜索深度
+    private maxIterations = 800;  // 增加迭代次数
+    private maxDepth = 20;        // 增加搜索深度
 
     /**
      * 执行MCTS搜索
@@ -28,7 +29,7 @@ export class MCTSEngine {
      * @param timeLimit 时间限制（毫秒）
      * @returns 最佳出牌
      */
-    search(gameState: GameState, timeLimit: number = 1000): Card[] | null {
+    search(gameState: GameState, timeLimit: number = 1500): Card[] | null {
         const startTime = Date.now();
         const rootNode = this.createNode(gameState, null, null);
 
@@ -148,18 +149,18 @@ export class MCTSEngine {
     }
 
     /**
-     * 模拟游戏（快速走子）
+     * 模拟游戏（启发式走子）
      */
     private simulate(gameState: GameState): number {
         let currentState = this.cloneGameState(gameState);
         let depth = 0;
-        const maxSimulationDepth = 20;
+        const maxSimulationDepth = 30;
 
         // 快速模拟到游戏结束或达到深度限制
         while (!this.isTerminal(currentState) && depth < maxSimulationDepth) {
-            const randomPlay = this.getRandomPlay(currentState);
-            if (randomPlay) {
-                currentState = this.applyPlay(currentState, randomPlay);
+            const heuristicPlay = this.getHeuristicPlay(currentState);
+            if (heuristicPlay) {
+                currentState = this.applyPlay(currentState, heuristicPlay);
             } else {
                 // 如果没有可出的牌，跳过
                 currentState = this.applyPass(currentState);
@@ -215,9 +216,12 @@ export class MCTSEngine {
     }
 
     /**
-     * 获取随机可出的牌
+     * 获取启发式出牌（非完全随机）
+     * 优先出：
+     * 1. 能管上的最小牌
+     * 2. 或者是自己手里的最小单张/对子（如果是首出）
      */
-    private getRandomPlay(gameState: GameState): Play | null {
+    private getHeuristicPlay(gameState: GameState): Play | null {
         const currentPlayer = gameState.players[gameState.currentPlayerIndex];
         const possiblePlays = findPossiblePlays(
             currentPlayer.hand,
@@ -230,6 +234,14 @@ export class MCTSEngine {
             return null;
         }
 
+        // 简单启发式：如果是跟牌，出最小的能管上的
+        if (gameState.lastPlay && gameState.lastPlayPlayerIndex !== gameState.currentPlayerIndex) {
+            possiblePlays.sort((a, b) => comparePlays(a, b, gameState.mainRank || undefined, gameState.mainSuit || undefined));
+            return possiblePlays[0];
+        }
+
+        // 如果是首出，随机出，但稍微偏向于出牌数量多的（如顺子、三带）以快速减少手牌
+        // 这里为了性能保持简单随机，或者稍微优化
         const randomIndex = Math.floor(Math.random() * possiblePlays.length);
         return possiblePlays[randomIndex];
     }
@@ -243,33 +255,40 @@ export class MCTSEngine {
 
     /**
      * 评估游戏状态（从某个玩家角度）
+     * 改进：结合手牌评分
      */
-    private evaluateState(gameState: GameState, playerIndex: number): number {
-        const player = gameState.players[playerIndex];
-        const teammateIndex = (playerIndex + 2) % 4;
+    private evaluateState(gameState: GameState, rootPlayerIndex: number): number {
+        const player = gameState.players[rootPlayerIndex];
+        const teammateIndex = (rootPlayerIndex + 2) % 4;
         const teammate = gameState.players[teammateIndex];
 
-        // 如果我方获胜
+        // 1. 胜负判定 (最高优先级)
         if (player.hand.length === 0 || teammate.hand.length === 0) {
-            return 1;
+            return 1.0;
         }
 
-        // 如果对手获胜
-        const opponent1 = gameState.players[(playerIndex + 1) % 4];
-        const opponent2 = gameState.players[(playerIndex + 3) % 4];
+        const opponent1 = gameState.players[(rootPlayerIndex + 1) % 4];
+        const opponent2 = gameState.players[(rootPlayerIndex + 3) % 4];
         if (opponent1.hand.length === 0 || opponent2.hand.length === 0) {
-            return 0;
+            return 0.0;
         }
 
-        // 中间状态：基于手牌数评估
-        const myTeamCards = player.hand.length + teammate.hand.length;
-        const opponentCards = opponent1.hand.length + opponent2.hand.length;
+        // 2. 基于手牌质量的评分 (HandEvaluator)
+        // 我们只评估当前玩家和队友的，因为对手手牌在MCTS中是未知的(或假设的)，
+        // 但在模拟结束状态，我们可以看到所有人的剩余手牌。
 
-        // 归一化到0-1
-        const totalCards = myTeamCards + opponentCards;
-        if (totalCards === 0) return 0.5;
+        const myScore = HandEvaluator.evaluate(player.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
+        const teammateScore = HandEvaluator.evaluate(teammate.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
+        const opp1Score = HandEvaluator.evaluate(opponent1.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
+        const opp2Score = HandEvaluator.evaluate(opponent2.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
 
-        return 1 - (myTeamCards / totalCards);
+        const myTeamTotal = myScore + teammateScore;
+        const oppTeamTotal = opp1Score + opp2Score;
+
+        if (myTeamTotal + oppTeamTotal === 0) return 0.5;
+
+        // 归一化得分
+        return myTeamTotal / (myTeamTotal + oppTeamTotal);
     }
 
     /**

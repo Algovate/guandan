@@ -77,6 +77,7 @@ export interface Player {
   hand: Card[];
   isAI: boolean;
   team: 0 | 1; // 0或1，表示两个队伍
+  avatar?: string;
 }
 
 // 游戏阶段

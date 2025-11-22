@@ -144,7 +144,7 @@ export default function PlayerHand() {
               disabled={!canPass}
               className="btn-casino-secondary"
             >
-              PASS
+              不出
             </motion.button>
 
             <motion.button
@@ -154,7 +154,7 @@ export default function PlayerHand() {
               disabled={possiblePlays.length === 0}
               className="btn-casino-secondary border-[#4CAF50] bg-gradient-to-b from-[#4CAF50] to-[#2E7D32]"
             >
-              HINT
+              提示
             </motion.button>
 
             <motion.button
@@ -164,14 +164,14 @@ export default function PlayerHand() {
               disabled={!canPlay}
               className="btn-casino-primary"
             >
-              PLAY
+              出牌
             </motion.button>
           </>
         )}
 
         {!isCurrentPlayer && (
           <div className="glass-panel text-white/90 px-8 py-3 rounded-full font-bold border border-white/20 shadow-lg tracking-wider">
-            WAITING FOR OTHERS...
+            等待其他玩家...
           </div>
         )}
       </div>
@@ -240,6 +240,19 @@ export default function PlayerHand() {
         >
           <span className="text-xl">📋</span>
         </button>
+      </div>
+
+      {/* User Info Panel */}
+      <div className="absolute bottom-6 left-6 z-50 pointer-events-auto flex items-center gap-3">
+        <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-3 border border-white/20 shadow-lg bg-black/30 backdrop-blur-md">
+          <div className={`w-10 h-10 rounded-full border-2 border-casino-gold shadow-md flex items-center justify-center bg-gradient-to-br ${player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700'} text-white overflow-hidden`}>
+            <span className="text-xl" role="img" aria-label="avatar">{player.avatar || '👤'}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-white font-bold font-serif text-sm leading-tight">{player.name}</span>
+            <span className="text-xs text-gray-300 font-serif">队伍 {player.team + 1}</span>
+          </div>
+        </div>
       </div>
 
       <HandDetail
