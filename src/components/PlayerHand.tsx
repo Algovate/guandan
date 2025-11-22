@@ -101,7 +101,7 @@ export default function PlayerHand() {
 
   const handlePlay = () => {
     if (canPlay && selectedPlay && selectedCards.length > 0) {
-      playCards(selectedCards);
+      playCards();
     }
   };
 

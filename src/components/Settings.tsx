@@ -3,7 +3,21 @@ import { useGameStore } from '../store/gameStore';
 import { AIDifficulty, GameMode } from '../game/types';
 
 export default function Settings() {
-  const { showSettings, toggleSettings, aiDifficulty, setAIDifficulty, gameMode, setGameMode, showToast, showDebug, toggleDebug } = useGameStore();
+  const {
+    showSettings,
+    toggleSettings,
+    aiDifficulty,
+    setAIDifficulty,
+    gameMode,
+    setGameMode,
+    showToast,
+    showDebug,
+    toggleDebug,
+    soundEnabled,
+    soundVolume,
+    setSoundEnabled,
+    setSoundVolume
+  } = useGameStore();
 
   const difficultyOptions = [
     {
@@ -187,6 +201,58 @@ export default function Settings() {
                       </motion.button>
                     ))}
                   </div>
+                </div>
+
+                {/* 声音设置 */}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-center justify-between bg-black/30 p-4 rounded-2xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl">🔊</div>
+                      <div>
+                        <div className="font-display font-bold text-lg text-gray-200">音效</div>
+                        <div className="text-xs text-gray-400">游戏音效开关</div>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setSoundEnabled(!soundEnabled)}
+                      className={`
+                        w-14 h-8 rounded-full p-1 transition-colors duration-300
+                        ${soundEnabled ? 'bg-green-500' : 'bg-gray-300'}
+                      `}
+                    >
+                      <motion.div
+                        className="w-6 h-6 bg-white rounded-full shadow-md"
+                        animate={{ x: soundEnabled ? 24 : 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    </motion.button>
+                  </div>
+
+                  {soundEnabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="bg-black/30 p-4 rounded-2xl border border-white/10"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm text-gray-300 min-w-[60px]">音量</div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={soundVolume * 100}
+                          onChange={(e) => setSoundVolume(Number(e.target.value) / 100)}
+                          className="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                          style={{
+                            background: `linear-gradient(to right, #d4af37 0%, #d4af37 ${soundVolume * 100}%, #4a4a4a ${soundVolume * 100}%, #4a4a4a 100%)`
+                          }}
+                        />
+                        <div className="text-sm text-gray-300 min-w-[40px] text-right">{Math.round(soundVolume * 100)}%</div>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
 
                 {/* 调试模式设置 */}

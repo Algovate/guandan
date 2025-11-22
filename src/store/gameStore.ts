@@ -6,6 +6,7 @@ import { AIPlayerManager } from '../ai/AIPlayer';
 import { createPlay } from '../game/CardTypes';
 import { PLAY_TYPE_NAMES } from '../utils/constants';
 import { StrategyEngine } from '../game/ai/StrategyEngine';
+import { soundManager, SoundEffect } from '../utils/SoundManager';
 
 interface GameStore {
   // 游戏状态
@@ -22,6 +23,8 @@ interface GameStore {
   showDebug: boolean;
   isAITurn: boolean;
   toastMessage: { message: string; type?: 'success' | 'error' | 'info' | 'warning' } | null;
+  soundEnabled: boolean;
+  soundVolume: number;
 
   // Actions
   initGame: () => void;
@@ -29,7 +32,7 @@ interface GameStore {
   selectCard: (card: Card) => void;
   deselectCard: (card: Card) => void;
   clearSelection: () => void;
-  playCards: (cards: Card[]) => { success: boolean; error?: string };
+  playCards: () => { success: boolean; error?: string }; // Modified signature
   pass: () => { success: boolean; error?: string };
   callMain: () => void;
   setAIDifficulty: (difficulty: AIDifficulty) => void;
@@ -41,6 +44,8 @@ interface GameStore {
   updateGameState: () => void;
   processAITurn: () => Promise<void>;
   showToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  setSoundEnabled: (enabled: boolean) => void;
+  setSoundVolume: (volume: number) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -55,6 +60,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   showDebug: false,
   isAITurn: false,
   toastMessage: null,
+  soundEnabled: true,
+  soundVolume: 0.5,
 
   initGame: () => {
     const { aiDifficulty } = get();
@@ -95,6 +102,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectCard: (card: Card) => {
     const { selectedCards } = get();
     const isSelected = selectedCards.some(c => c.id === card.id);
+
+    soundManager.play(SoundEffect.CARD_SELECT);
+
     if (isSelected) {
       set({ selectedCards: selectedCards.filter(c => c.id !== card.id) });
     } else {
@@ -111,11 +121,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ selectedCards: [] });
   },
 
-  playCards: (cards: Card[]) => {
-    const { gameManager, gameState } = get();
+  playCards: () => { // Modified implementation
+    const { gameManager, gameState, selectedCards } = get();
     if (!gameManager || !gameState) {
       return { success: false, error: '游戏未初始化' };
     }
+
+    soundManager.play(SoundEffect.CARD_PLAY);
 
     // 找到玩家索引（bottom位置）
     const playerIndex = gameState.players.findIndex(p => !p.isAI);
@@ -123,7 +135,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return { success: false, error: '找不到玩家' };
     }
 
-    const result = gameManager.playCards(playerIndex, cards);
+    const result = gameManager.playCards(playerIndex, selectedCards); // Use selectedCards
     if (result.success) {
       const newState = gameManager.getState();
       set({
@@ -132,8 +144,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
 
       // 显示成功提示
-      if (cards.length > 0) {
-        const play = createPlay(cards, newState.mainRank || undefined, newState.mainSuit || undefined);
+      if (selectedCards.length > 0) {
+        const play = createPlay(selectedCards, newState.mainRank || undefined, newState.mainSuit || undefined);
         if (play) {
           get().showToast(`出牌成功：${PLAY_TYPE_NAMES[play.type] || ''}`, 'success');
         }
@@ -194,6 +206,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   setGameMode: (mode: GameMode) => {
     set({ gameMode: mode });
     get().showToast(`已切换至${mode === GameMode.COMPETITIVE ? '竞技' : '教学'}模式`, 'success');
+  },
+
+  setSoundEnabled: (enabled: boolean) => {
+    set({ soundEnabled: enabled });
+    soundManager.setEnabled(enabled);
+  },
+
+  setSoundVolume: (volume: number) => {
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    set({ soundVolume: clampedVolume });
+    soundManager.setVolume(clampedVolume);
   },
 
   getHint: () => {

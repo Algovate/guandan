@@ -206,15 +206,18 @@ export const Card: React.FC<CardProps> = ({
       className={`
         relative rounded-xl cursor-pointer transition-all duration-200
         ${sizeClass}
-        ${isSelected ? 'z-10 -translate-y-6' : ''}
+        ${isSelected ? 'z-10 -translate-y-4' : 'hover:-translate-y-1'}
+        ${isSelected ? 'drop-shadow-[0_4px_8px_rgba(212,175,55,0.3)]' : ''}
         ${isHighlighted ? 'ring-2 ring-[#D4AF37] ring-opacity-50' : ''}
-        ${!isPlayable && !isFaceDown ? 'brightness-75 grayscale-[0.3]' : ''}
+        ${!isPlayable && !isFaceDown ? 'brightness-75 grayscale-[0.3] cursor-not-allowed' : ''}
         ${className}
       `}
       onClick={(e) => {
         e.stopPropagation();
         onClick?.();
       }}
+      transition={{ type: "spring", stiffness: 250, damping: 20 }}
+      whileTap={{ scale: 0.98 }}
     >
       {isFaceDown ? (
         <CardBack />

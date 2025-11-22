@@ -250,4 +250,24 @@
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(212, 175, 55, 0.5);
   }
+
+  /* Custom cursors for better UX */
+  .cursor-grab {
+    cursor: grab;
+  }
+
+  .cursor-grab:active {
+    cursor: grabbing;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  .card-face {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"]:disabled {
+    cursor: not-allowed;
+  }
 }

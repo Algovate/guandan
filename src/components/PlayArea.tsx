@@ -1,9 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
-import { GamePhase, GameMode } from '../game/types';
+import { PlayerPosition } from '../game/types';
 import Card from './Card';
 import { PLAY_TYPE_NAMES } from '../utils/constants';
-import { PlayerPosition } from '../game/types';
 
 export default function PlayArea() {
   const { gameState } = useGameStore();
@@ -59,7 +58,12 @@ export default function PlayArea() {
         initial={initialVariant}
         animate={{ x: 0, y: 0, opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
         exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={{
+          type: "spring",
+          stiffness: 200,
+          damping: 20,
+          mass: 0.8
+        }}
       >
         {/* 玩家名字和牌型提示 */}
         <div className="mb-4 flex items-center gap-3 glass-panel px-4 py-1.5 rounded-full shadow-xl">
@@ -81,11 +85,21 @@ export default function PlayArea() {
                 marginLeft: index === 0 ? 0 : '-3rem', // 负 margin 实现重叠
                 zIndex: index
               }}
-              initial={{ scale: 0.8, rotate: 0 }}
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+                y: -20
+              }}
               animate={{
-                scale: 0.9,
-                rotate: (index - (play.cards.length - 1) / 2) * 3, // 扇形展开
-                y: Math.abs(index - (play.cards.length - 1) / 2) * 2 // 轻微弧度
+                opacity: 1,
+                scale: 1,
+                y: Math.abs(index - (play.cards.length - 1) / 2) * 2, // Arc shape
+                rotate: (index - (play.cards.length - 1) / 2) * 3, // Fan spread
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 250,
+                damping: 20
               }}
               whileHover={{ scale: 1.1, zIndex: 100, y: -20, transition: { duration: 0.2 } }}
             >

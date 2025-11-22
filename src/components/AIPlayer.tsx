@@ -49,7 +49,7 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
       } : {
         scale: 1
       }}
-      transition={{ duration: 0.3, type: "spring" }}
+      transition={{ duration: 0.2, type: "spring", stiffness: 250, damping: 20 }}
     >
       {/* 玩家信息卡片 - 经典卡片风格 */}
       <motion.div
