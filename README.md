@@ -48,6 +48,33 @@ npm run build
 npm run preview
 ```
 
+## 部署
+
+### GitHub Pages
+
+项目已配置 GitHub Actions 自动部署到 GitHub Pages。
+
+#### 首次设置
+
+1. 在 GitHub 仓库设置中启用 Pages：
+   - 进入仓库的 `Settings` → `Pages`
+   - 在 `Source` 中选择 `GitHub Actions`
+
+2. 推送代码到 `main` 分支，GitHub Actions 会自动构建并部署
+
+3. 部署完成后，访问：`https://<username>.github.io/<repository-name>/`
+
+#### 自动部署
+
+- 每次推送到 `main` 分支时自动触发部署
+- 也可以手动触发：在 Actions 标签页选择 workflow 并点击 `Run workflow`
+
+#### 注意事项
+
+- 如果仓库名为 `username.github.io`，应用会部署到根路径
+- 如果仓库名为其他名称，应用会自动部署到 `/repository-name/` 子路径
+- 构建过程会自动处理 base path 配置
+
 ## 游戏规则
 
 掼蛋是一种流行于江苏及周边地区的扑克牌游戏：
