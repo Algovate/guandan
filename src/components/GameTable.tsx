@@ -143,16 +143,16 @@ export default function GameTable() {
             </motion.div>
 
             <h2 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-gold-metallic">
-              {gameState.teamScores[0] > gameState.teamScores[1] ? '我方获胜' : '对方获胜'}
+              {gameState.teamScores[0] > gameState.teamScores[1] ? `${gameState.teamNames[0]}获胜` : `${gameState.teamNames[1]}获胜`}
             </h2>
 
             <div className="mb-10 mt-4 w-full space-y-4">
               <div className="flex justify-between items-center border-b border-white/10 pb-4 text-xl">
-                <span className="font-serif text-gray-300">我方队伍</span>
+                <span className="font-serif text-gray-300">{gameState.teamNames[0]}</span>
                 <span className="font-bold text-gold-metallic text-3xl">{gameState.teamScores[0]}</span>
               </div>
               <div className="flex justify-between items-center pt-2 text-xl">
-                <span className="font-serif text-gray-300">对方队伍</span>
+                <span className="font-serif text-gray-300">{gameState.teamNames[1]}</span>
                 <span className="font-bold text-silver-metallic text-3xl">{gameState.teamScores[1]}</span>
               </div>
             </div>

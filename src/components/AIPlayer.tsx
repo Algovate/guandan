@@ -39,8 +39,13 @@ const UserIcon = () => (
 
 export default function AIPlayer({ player, position, isCurrentPlayer, isThinking = false }: AIPlayerProps) {
   const cardCount = player.hand.length;
+  const gameState = useGameStore(state => state.gameState);
   const showCardCountThreshold = useGameStore(state => state.showCardCountThreshold);
   const teamColor = player.team === 0 ? 'from-blue-500 to-blue-700' : 'from-red-500 to-red-700';
+  
+  // 获取队伍名称，如果名称较长则只显示前两个字
+  const teamName = gameState?.teamNames?.[player.team] || `队伍${player.team + 1}`;
+  const teamDisplayName = teamName.length > 2 ? teamName.slice(0, 2) : teamName;
 
   return (
     <motion.div
@@ -104,8 +109,8 @@ export default function AIPlayer({ player, position, isCurrentPlayer, isThinking
           </div>
 
           {/* 队伍标识 - 左下角悬浮 */}
-          <div className={`absolute bottom-0 left-0 w-5 h-5 md:w-8 md:h-8 rounded-lg border md:border-2 border-white/50 shadow-lg flex items-center justify-center text-[10px] md:text-sm font-bold bg-gradient-to-br ${teamColor} text-white z-10 transform -rotate-6`}>
-            {player.team + 1}
+          <div className={`absolute bottom-0 left-0 w-5 h-5 md:w-8 md:h-8 rounded-lg border md:border-2 border-white/50 shadow-lg flex items-center justify-center text-[8px] md:text-xs font-bold bg-gradient-to-br ${teamColor} text-white z-10 transform -rotate-6`}>
+            {teamDisplayName}
           </div>
 
           {/* 牌数 Badge - 右上角悬浮（仅在剩余牌数≤阈值时显示） */}

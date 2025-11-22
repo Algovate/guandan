@@ -14,6 +14,7 @@ import { PlayValidator } from './PlayValidator';
 import { CARDS_PER_PLAYER, PLAYER_COUNT, LEVEL_ORDER } from '../utils/constants';
 import { generateId } from '../utils/helpers';
 import { getRandomPersonality } from './ai/AIPersonality';
+import { selectRandomTeamThemes, type TeamTheme } from '../utils/teamNames';
 
 /**
  * 游戏状态管理类
@@ -29,9 +30,12 @@ export class GameStateManager {
    * 创建初始游戏状态
    */
   private createInitialState(): GameState {
+    // 随机选择两个队伍主题
+    const [team0Theme, team1Theme] = selectRandomTeamThemes();
+    
     return {
       phase: GamePhase.WAITING,
-      players: this.createPlayers(),
+      players: this.createPlayers(team0Theme, team1Theme),
       currentPlayerIndex: 0,
       currentPlay: null,
       lastPlay: null,
@@ -41,6 +45,7 @@ export class GameStateManager {
       mainRank: null,
       deck: [],
       teamScores: [0, 0],
+      teamNames: [team0Theme.teamName, team1Theme.teamName],
       roundWinner: null,
       playHistory: [], // 初始化出牌历史
     };
@@ -49,47 +54,48 @@ export class GameStateManager {
   /**
    * 创建玩家
    */
-  private createPlayers(): Player[] {
+  private createPlayers(team0Theme: TeamTheme, team1Theme: TeamTheme): Player[] {
     // 为每个AI玩家随机分配性格风格
+    // 玩家位置分配：TOP (team 0), LEFT (team 1), RIGHT (team 1), BOTTOM (team 0)
     return [
       {
         id: generateId(),
-        name: '诸葛亮',
+        name: team0Theme.players[0],
         position: PlayerPosition.TOP,
         hand: [],
         isAI: true,
         team: 0,
-        avatar: '🧙‍♂️',
+        avatar: team0Theme.avatars?.[0] || '👤',
         personality: getRandomPersonality().type
       },
       {
         id: generateId(),
-        name: '曹操',
+        name: team1Theme.players[0],
         position: PlayerPosition.LEFT,
         hand: [],
         isAI: true,
         team: 1,
-        avatar: '😈',
+        avatar: team1Theme.avatars?.[0] || '👤',
         personality: getRandomPersonality().type
       },
       {
         id: generateId(),
-        name: '孙权',
+        name: team1Theme.players[1],
         position: PlayerPosition.RIGHT,
         hand: [],
         isAI: true,
         team: 1,
-        avatar: '🦁',
+        avatar: team1Theme.avatars?.[1] || '👤',
         personality: getRandomPersonality().type
       },
       {
         id: generateId(),
-        name: '刘备',
+        name: team0Theme.players[1],
         position: PlayerPosition.BOTTOM,
         hand: [],
         isAI: false,
         team: 0,
-        avatar: '👑'
+        avatar: team0Theme.avatars?.[1] || '👤'
       },
     ];
   }

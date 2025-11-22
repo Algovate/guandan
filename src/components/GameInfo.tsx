@@ -107,7 +107,7 @@ export default function GameInfo() {
           className="glass-panel px-3 py-2 md:px-5 md:py-3 flex items-center gap-3 md:gap-4 rounded-2xl"
         >
           <div className="flex flex-col items-center">
-            <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">我方</div>
+            <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{gameState.teamNames[0]}</div>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-[#1A237E] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
               <span className="text-white text-base md:text-lg font-bold font-serif relative z-10">{gameState.teamScores[0]}</span>
@@ -117,7 +117,7 @@ export default function GameInfo() {
           <div className="text-gold-metallic text-lg md:text-xl font-serif italic font-bold px-0.5 md:px-1 pt-3 md:pt-4">vs</div>
 
           <div className="flex flex-col items-center">
-            <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">对方</div>
+            <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{gameState.teamNames[1]}</div>
             <div className="w-8 h-8 md:w-10 md:h-10 bg-[#B71C1C] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
               <span className="text-white text-base md:text-lg font-bold font-serif relative z-10">{gameState.teamScores[1]}</span>

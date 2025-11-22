@@ -112,6 +112,7 @@ export interface GameState {
   mainRank: Rank | null;
   deck: Card[];
   teamScores: [number, number]; // 两个队伍的得分
+  teamNames: [string, string]; // 两个队伍的名称
   roundWinner: number | null;
   playHistory?: Play[];  // 出牌历史（可选）
 }

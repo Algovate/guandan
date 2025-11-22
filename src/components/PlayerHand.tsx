@@ -242,7 +242,7 @@ export default function PlayerHand() {
           </div>
           <div className="flex flex-col">
             <span className="text-white font-bold font-serif text-lg md:text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
-            <span className="text-[10px] md:text-xs text-gray-300 font-serif uppercase tracking-wider mt-0.5 md:mt-1">队伍 {player.team + 1}</span>
+            <span className="text-[10px] md:text-xs text-gray-300 font-serif uppercase tracking-wider mt-0.5 md:mt-1">{gameState?.teamNames?.[player.team] || `队伍 ${player.team + 1}`}</span>
           </div>
         </div>
       </div>
