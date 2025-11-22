@@ -1,20 +1,20 @@
 import type { Play, Player, GameState } from '../game/types';
-import { getAIStrategy } from './strategies';
-import type { AIStrategy } from './strategies';
 import { AIDifficulty } from '../game/types';
+import { StrategyEngine } from '../game/ai/StrategyEngine';
+import { createPlay } from '../game/CardTypes';
 
 /**
  * AI决策引擎
  */
 export class AIDecisionEngine {
-  private strategy: AIStrategy;
+  // private difficulty: AIDifficulty;
   
-  constructor(difficulty: AIDifficulty = AIDifficulty.MEDIUM) {
-    this.strategy = getAIStrategy(difficulty);
+  constructor(_difficulty: AIDifficulty = AIDifficulty.MEDIUM) {
+    // this.difficulty = difficulty;
   }
   
-  setDifficulty(difficulty: AIDifficulty): void {
-    this.strategy = getAIStrategy(difficulty);
+  setDifficulty(_difficulty: AIDifficulty): void {
+    // this.difficulty = difficulty;
   }
   
   /**
@@ -24,20 +24,21 @@ export class AIDecisionEngine {
     player: Player,
     gameState: GameState
   ): { play: Play | null; pass: boolean } {
-    const lastPlay = gameState.lastPlay;
-    const lastPlayPlayerIndex = gameState.lastPlayPlayerIndex;
     
-    // 判断上家是否是队友
-    const isTeammateLastPlay = lastPlayPlayerIndex >= 0 
-      ? gameState.players[lastPlayPlayerIndex].team === player.team
-      : false;
+    // Use the new Strategy Engine
+    const cardsToPlay = StrategyEngine.decideMove(player, gameState);
+
+    if (!cardsToPlay || cardsToPlay.length === 0) {
+        return { play: null, pass: true };
+    }
+
+    // Convert cards back to a Play object
+    const play = createPlay(cardsToPlay, gameState.mainRank || undefined, gameState.mainSuit || undefined);
     
-    return this.strategy.decidePlay(
-      player.hand,
-      lastPlay,
-      isTeammateLastPlay,
-      gameState.mainRank || undefined,
-      gameState.mainSuit || undefined
-    );
+    if (!play) {
+        return { play: null, pass: true }; // Should not happen if StrategyEngine is correct
+    }
+
+    return { play, pass: false };
   }
 }
