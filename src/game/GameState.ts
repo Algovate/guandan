@@ -13,6 +13,7 @@ import { Deck } from './Deck';
 import { PlayValidator } from './PlayValidator';
 import { CARDS_PER_PLAYER, PLAYER_COUNT, LEVEL_ORDER } from '../utils/constants';
 import { generateId } from '../utils/helpers';
+import { getRandomPersonality } from './ai/AIPersonality';
 
 /**
  * 游戏状态管理类
@@ -49,6 +50,7 @@ export class GameStateManager {
    * 创建玩家
    */
   private createPlayers(): Player[] {
+    // 为每个AI玩家随机分配性格风格
     return [
       {
         id: generateId(),
@@ -57,7 +59,8 @@ export class GameStateManager {
         hand: [],
         isAI: true,
         team: 0,
-        avatar: '🧙‍♂️'
+        avatar: '🧙‍♂️',
+        personality: getRandomPersonality().type
       },
       {
         id: generateId(),
@@ -66,7 +69,8 @@ export class GameStateManager {
         hand: [],
         isAI: true,
         team: 1,
-        avatar: '😈'
+        avatar: '😈',
+        personality: getRandomPersonality().type
       },
       {
         id: generateId(),
@@ -75,7 +79,8 @@ export class GameStateManager {
         hand: [],
         isAI: true,
         team: 1,
-        avatar: '🦁'
+        avatar: '🦁',
+        personality: getRandomPersonality().type
       },
       {
         id: generateId(),

@@ -81,6 +81,7 @@ export interface Player {
   team: 0 | 1; // 0或1，表示两个队伍
   avatar?: string;
   avatarImage?: string;
+  personality?: string; // AI性格类型（PersonalityType）
 }
 
 // 游戏阶段

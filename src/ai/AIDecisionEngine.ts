@@ -1,9 +1,8 @@
 import type { Play, Player, GameState } from '../game/types';
-import { AIDifficulty } from '../game/types';
 import { StrategyEngine } from '../game/ai/StrategyEngine';
 import { createPlay } from '../game/CardTypes';
 import type { AIPersonality } from '../game/ai/AIPersonality';
-import { getPersonality, PersonalityType, calculateThinkingTime } from '../game/ai/AIPersonality';
+import { getPersonality, PersonalityType, getRandomPersonality, calculateThinkingTime } from '../game/ai/AIPersonality';
 import type { AIDecision } from '../game/ai/DecisionExplainer';
 import { DecisionExplainer } from '../game/ai/DecisionExplainer';
 
@@ -40,18 +39,12 @@ export interface AIDecisionResult {
  * AI决策引擎 - 整合性格和解释系统
  */
 export class AIDecisionEngine {
-  private difficulty: AIDifficulty;
   private personality: AIPersonality;
   private explainer: DecisionExplainer;
 
-  constructor(difficulty: AIDifficulty = AIDifficulty.MEDIUM, personalityType?: PersonalityType) {
-    this.difficulty = difficulty;
-    this.personality = personalityType ? getPersonality(personalityType) : getPersonality(PersonalityType.BALANCED);
+  constructor(personalityType?: PersonalityType) {
+    this.personality = personalityType ? getPersonality(personalityType) : getRandomPersonality();
     this.explainer = new DecisionExplainer();
-  }
-
-  setDifficulty(difficulty: AIDifficulty): void {
-    this.difficulty = difficulty;
   }
 
   setPersonality(personalityType: PersonalityType): void {
@@ -82,7 +75,6 @@ export class AIDecisionEngine {
     const cardsToPlay = StrategyEngine.decideMove(
       player,
       gameState,
-      this.difficulty,
       this.personality
     );
 

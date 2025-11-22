@@ -1,5 +1,5 @@
 import type { GameState, Card, Play, Player } from '../types';
-import { AIDifficulty, PlayType } from '../types';
+import { PlayType } from '../types';
 import { findPossiblePlays, comparePlays, canBeat } from '../CardTypes';
 import { HandEvaluator } from './HandEvaluator';
 import { CardTracker } from './CardTracker';
@@ -40,7 +40,6 @@ export class StrategyEngine {
   static decideMove(
     player: Player,
     gameState: GameState,
-    difficulty: AIDifficulty = AIDifficulty.MEDIUM,
     personality?: AIPersonality
   ): Card[] | null {
     // 确保初始化
@@ -51,15 +50,21 @@ export class StrategyEngine {
     const { hand } = player;
     const { lastPlay, lastPlayPlayerIndex, mainRank, mainSuit, players } = gameState;
 
-    // 如果没有性格，使用默认
-    const aiPersonality = personality || getPersonality(PersonalityType.BALANCED);
+    // 如果没有性格，从player中获取，或使用默认
+    let aiPersonality = personality;
+    if (!aiPersonality && player.personality) {
+      aiPersonality = getPersonality(player.personality as PersonalityType);
+    }
+    if (!aiPersonality) {
+      aiPersonality = getPersonality(PersonalityType.BALANCED);
+    }
 
     // 评估手牌
     const handScore = HandEvaluator.evaluate(hand, mainRank || undefined, mainSuit || undefined);
 
     // 1. 首出（没有lastPlay或自己是上家）
     if (!lastPlay || lastPlayPlayerIndex === -1 || lastPlayPlayerIndex === gameState.currentPlayerIndex) {
-      return this.decideLeadMove(player, gameState, handScore, aiPersonality, difficulty);
+      return this.decideLeadMove(player, gameState, handScore, aiPersonality);
     }
 
     // 2. 跟牌
@@ -91,8 +96,7 @@ export class StrategyEngine {
       lastPlay,
       beatingPlays,
       handScore,
-      aiPersonality,
-      difficulty
+      aiPersonality
     );
   }
 
@@ -103,14 +107,13 @@ export class StrategyEngine {
     player: Player,
     gameState: GameState,
     _handScore: any,
-    personality: AIPersonality,
-    difficulty: AIDifficulty
+    personality: AIPersonality
   ): Card[] {
     const { hand } = player;
     const { mainRank, mainSuit } = gameState;
 
-    // 困难AI使用MCTS
-    if (difficulty === AIDifficulty.HARD && this.mctsEngine) {
+    // 激进型AI可以使用MCTS进行深度思考
+    if (personality.type === PersonalityType.AGGRESSIVE && this.mctsEngine) {
       const mctsResult = this.mctsEngine.search(gameState, 1000);
       if (mctsResult) {
         return mctsResult;
@@ -199,8 +202,7 @@ export class StrategyEngine {
     _lastPlay: Play,
     beatingPlays: Play[],
     _handScore: any,
-    personality: AIPersonality,
-    difficulty: AIDifficulty
+    personality: AIPersonality
   ): Card[] | null {
     const { hand } = player;
     const { mainRank, mainSuit } = gameState;
@@ -239,8 +241,8 @@ export class StrategyEngine {
     }
 
     // 4. 基于价值评估的决策 (Value-Based Decision)
-    // 我们不仅看出的牌小不小，还要看剩下的牌好不好
-    if (difficulty === AIDifficulty.HARD || difficulty === AIDifficulty.MEDIUM) {
+    // 保守型和均衡型AI使用价值评估
+    if (personality.type === PersonalityType.CONSERVATIVE || personality.type === PersonalityType.BALANCED) {
       let bestPlay: Play | null = null;
       let maxValue = -Infinity;
 
@@ -266,17 +268,19 @@ export class StrategyEngine {
       }
 
       if (bestPlay) {
-        // 如果最佳出牌会导致手牌结构严重破坏（价值大幅下降），且不是必须管，可以选择过牌
+        // 如果最佳出牌会导致手牌结构严重破坏（价值大幅下降），可以选择过牌
         // 比如为了管一个对3，拆了三个K
+        // 保守型更倾向于避免破坏手牌结构
         const cost = currentHandValue - maxValue;
-        if (cost > 20 && personality.type !== PersonalityType.AGGRESSIVE) { // 阈值可调
+        const costThreshold = personality.type === PersonalityType.CONSERVATIVE ? 15 : 20;
+        if (cost > costThreshold) {
           return null;
         }
         return bestPlay.cards;
       }
     }
 
-    // 5. 默认逻辑 (Fallback for Easy mode or failure)
+    // 5. 默认逻辑 (Fallback)
     normalPlays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
     return normalPlays[0].cards;
   }

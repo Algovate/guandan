@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
-import { AIDifficulty, GameMode } from '../game/types';
+import { GameMode } from '../game/types';
 
 type SettingsTab = 'game' | 'audio' | 'advanced';
 
@@ -11,8 +11,6 @@ export default function Settings() {
   const {
     showSettings,
     toggleSettings,
-    aiDifficulty,
-    setAIDifficulty,
     gameMode,
     setGameMode,
     showToast,
@@ -23,36 +21,6 @@ export default function Settings() {
     setSoundEnabled,
     setSoundVolume
   } = useGameStore();
-
-  const difficultyOptions = [
-    {
-      value: AIDifficulty.EASY,
-      label: '简单',
-      desc: 'AI随机出牌，适合新手',
-      icon: '😊',
-      color: 'from-green-500 to-green-600',
-    },
-    {
-      value: AIDifficulty.MEDIUM,
-      label: '中等',
-      desc: 'AI使用基础策略',
-      icon: '🤔',
-      color: 'from-yellow-500 to-orange-600',
-    },
-    {
-      value: AIDifficulty.HARD,
-      label: '困难',
-      desc: 'AI深度分析，极具挑战',
-      icon: '🧠',
-      color: 'from-red-500 to-red-700',
-    },
-  ];
-
-  const handleDifficultyChange = (difficulty: AIDifficulty) => {
-    setAIDifficulty(difficulty);
-    const option = difficultyOptions.find(opt => opt.value === difficulty);
-    showToast(`AI难度已设置为：${option?.label}`, 'success');
-  };
 
   const modeOptions = [
     {
@@ -230,54 +198,16 @@ export default function Settings() {
                           </div>
                         </div>
 
-                        {/* AI难度设置 */}
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <div className="text-lg">🤖</div>
-                            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">AI难度</h3>
-                          </div>
-                          <div className="space-y-1.5">
-                            {difficultyOptions.map((option, index) => {
-                              const isSelected = aiDifficulty === option.value;
-                              return (
-                                <motion.button
-                                  key={option.value}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: index * 0.05 }}
-                                  whileHover={{ scale: 1.01, x: 2 }}
-                                  whileTap={{ scale: 0.99 }}
-                                  onClick={() => handleDifficultyChange(option.value)}
-                                  className={`
-                                    w-full p-2.5 rounded-lg border transition-all duration-200 relative overflow-hidden
-                                    flex items-center gap-2.5 text-left
-                                    ${isSelected
-                                      ? `bg-gradient-to-r ${option.color} text-white border-transparent shadow-md`
-                                      : 'bg-white/5 text-gray-200 border-white/10 hover:border-white/20 hover:bg-white/10'
-                                    }
-                                  `}
-                                >
-                                  <div className="text-2xl flex-shrink-0">{option.icon}</div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className={`font-semibold text-sm ${isSelected ? 'text-white' : 'text-gray-100'}`}>
-                                      {option.label}
-                                    </div>
-                                    <div className={`text-xs ${isSelected ? 'text-white/90' : 'text-gray-400'}`}>
-                                      {option.desc}
-                                    </div>
-                                  </div>
-                                  {isSelected && (
-                                    <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      className="text-lg"
-                                    >
-                                      ✓
-                                    </motion.div>
-                                  )}
-                                </motion.button>
-                              );
-                            })}
+                        {/* AI风格说明 */}
+                        <div className="bg-white/5 rounded-lg border border-white/10 p-3">
+                          <div className="flex items-start gap-2.5">
+                            <div className="text-xl">🤖</div>
+                            <div className="flex-1">
+                              <div className="font-semibold text-sm text-gray-100 mb-1">AI对手风格</div>
+                              <div className="text-xs text-gray-400 leading-relaxed">
+                                每局游戏AI对手会随机分配不同的性格风格：激进型、保守型、配合型、均衡型，让每局游戏都充满变数和挑战！
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </motion.div>

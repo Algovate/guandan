@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import type { GameState, Card } from '../game/types';
 import { GameStateManager } from '../game/GameState';
-import { AIDifficulty, GamePhase, GameMode } from '../game/types';
+import { GamePhase, GameMode } from '../game/types';
 import { AIPlayerManager } from '../ai/AIPlayer';
 import { createPlay } from '../game/CardTypes';
 import { PLAY_TYPE_NAMES } from '../utils/constants';
 import { StrategyEngine } from '../game/ai/StrategyEngine';
 import { soundManager, SoundEffect } from '../utils/SoundManager';
+import { PersonalityType } from '../game/ai/AIPersonality';
 
 interface GameStore {
   // 游戏状态
@@ -16,7 +17,6 @@ interface GameStore {
 
   // UI状态
   selectedCards: Card[];
-  aiDifficulty: AIDifficulty;
   gameMode: GameMode;
   showTutorial: boolean;
   showSettings: boolean;
@@ -35,7 +35,6 @@ interface GameStore {
   playCards: () => { success: boolean; error?: string }; // Modified signature
   pass: () => { success: boolean; error?: string };
   callMain: () => void;
-  setAIDifficulty: (difficulty: AIDifficulty) => void;
   setGameMode: (mode: GameMode) => void;
   getHint: () => void;
   toggleTutorial: () => void;
@@ -53,7 +52,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   gameManager: null,
   aiManager: null,
   selectedCards: [],
-  aiDifficulty: AIDifficulty.MEDIUM,
   gameMode: GameMode.COMPETITIVE,
   showTutorial: false,
   showSettings: false,
@@ -64,12 +62,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   soundVolume: 0.5,
 
   initGame: () => {
-    const { aiDifficulty } = get();
     const manager = new GameStateManager();
-    const aiManager = new AIPlayerManager(aiDifficulty);
+    // AI管理器会在需要时根据player的personality创建
     set({
       gameManager: manager,
-      aiManager,
+      aiManager: null,
       gameState: manager.getState(),
       selectedCards: [],
       isAITurn: false
@@ -77,18 +74,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   startGame: () => {
-    const { gameManager, aiManager } = get();
+    const { gameManager } = get();
     if (!gameManager) return;
     gameManager.startNewGame();
     gameManager.callMain();
     const newState = gameManager.getState();
     set({ gameState: newState });
-
-    // 初始化AI管理器
-    if (!aiManager) {
-      const newAIManager = new AIPlayerManager(get().aiDifficulty);
-      set({ aiManager: newAIManager });
-    }
 
     // 如果是AI轮次，开始处理
     if (newState.phase === GamePhase.PLAYING) {
@@ -195,14 +186,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ gameState: gameManager.getState() });
   },
 
-  setAIDifficulty: (difficulty: AIDifficulty) => {
-    const { aiManager } = get();
-    if (aiManager) {
-      aiManager.setDifficulty(difficulty);
-    }
-    set({ aiDifficulty: difficulty });
-  },
-
   setGameMode: (mode: GameMode) => {
     set({ gameMode: mode });
     get().showToast(`已切换至${mode === GameMode.COMPETITIVE ? '竞技' : '教学'}模式`, 'success');
@@ -220,17 +203,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   getHint: () => {
-    const { gameState, gameMode, aiDifficulty } = get();
+    const { gameState, gameMode } = get();
     if (!gameState || gameMode !== GameMode.TEACHING) return;
 
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     if (currentPlayer.isAI) return;
 
-    // 使用策略引擎获取建议
+    // 使用策略引擎获取建议（使用均衡型性格作为提示）
     const suggestedCards = StrategyEngine.decideMove(
       currentPlayer,
-      gameState,
-      aiDifficulty
+      gameState
     );
 
     if (suggestedCards && suggestedCards.length > 0) {
@@ -277,14 +259,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   processAITurn: async () => {
-    const { gameState, gameManager, aiManager, isAITurn } = get();
-    if (!gameState || !gameManager || !aiManager || isAITurn) return;
+    const { gameState, gameManager, isAITurn } = get();
+    if (!gameState || !gameManager || isAITurn) return;
 
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
     if (!currentPlayer || !currentPlayer.isAI) {
       set({ isAITurn: false });
       return;
     }
+
+    // 为当前AI玩家创建或获取AI管理器（根据player的personality）
+    const personalityType = currentPlayer.personality 
+      ? (currentPlayer.personality as PersonalityType)
+      : undefined;
+    const aiManager = new AIPlayerManager(personalityType);
 
     set({ isAITurn: true });
 

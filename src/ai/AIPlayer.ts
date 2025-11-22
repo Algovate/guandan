@@ -1,6 +1,6 @@
 import type { Player, GameState, Card } from '../game/types';
 import { AIDecisionEngine } from './AIDecisionEngine';
-import { AIDifficulty } from '../game/types';
+import { PersonalityType } from '../game/ai/AIPersonality';
 import { delay } from '../utils/helpers';
 
 /**
@@ -9,12 +9,16 @@ import { delay } from '../utils/helpers';
 export class AIPlayerManager {
   private decisionEngine: AIDecisionEngine;
   
-  constructor(difficulty: AIDifficulty = AIDifficulty.MEDIUM) {
-    this.decisionEngine = new AIDecisionEngine(difficulty);
+  constructor(personalityType?: PersonalityType) {
+    this.decisionEngine = new AIDecisionEngine(personalityType);
   }
   
-  setDifficulty(difficulty: AIDifficulty): void {
-    this.decisionEngine.setDifficulty(difficulty);
+  setPersonality(personalityType: PersonalityType): void {
+    this.decisionEngine.setPersonality(personalityType);
+  }
+  
+  getPersonality() {
+    return this.decisionEngine.getPersonality();
   }
   
   /**
