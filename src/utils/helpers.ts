@@ -28,7 +28,7 @@ export function compareCards(
   const card2IsBigJoker = card2.rank === Rank.JOKER_BIG;
   const card1IsSmallJoker = card1.rank === Rank.JOKER_SMALL;
   const card2IsSmallJoker = card2.rank === Rank.JOKER_SMALL;
-  
+
   if (card1IsBigJoker) return 1;
   if (card2IsBigJoker) return -1;
   if (card1IsSmallJoker && !card2IsBigJoker) return 1;
@@ -74,6 +74,58 @@ export function compareCards(
 }
 
 /**
+ * 比较两张牌的大小（仅比较数值，忽略花色，除非是级牌）
+ * 用于判断出牌是否能压过
+ */
+export function compareCardValues(
+  card1: Card,
+  card2: Card,
+  mainRank?: Rank,
+  mainSuit?: Suit
+): number {
+  // 四王最大
+  const card1IsBigJoker = card1.rank === Rank.JOKER_BIG;
+  const card2IsBigJoker = card2.rank === Rank.JOKER_BIG;
+  const card1IsSmallJoker = card1.rank === Rank.JOKER_SMALL;
+  const card2IsSmallJoker = card2.rank === Rank.JOKER_SMALL;
+
+  if (card1IsBigJoker) return 1;
+  if (card2IsBigJoker) return -1;
+  if (card1IsSmallJoker && !card2IsBigJoker) return 1;
+  if (card2IsSmallJoker && !card1IsBigJoker) return -1;
+
+  // 级牌（Level Card）处理
+  const isCard1Level = mainRank && card1.rank === mainRank;
+  const isCard2Level = mainRank && card2.rank === mainRank;
+
+  // 如果都是级牌
+  if (isCard1Level && isCard2Level) {
+    // 红桃级牌最大（逢人配）
+    if (card1.suit === Suit.HEART && card2.suit !== Suit.HEART) return 1;
+    if (card2.suit === Suit.HEART && card1.suit !== Suit.HEART) return -1;
+    // 其他级牌大小相同
+    return 0;
+  }
+
+  // 一个是级牌，一个不是
+  if (isCard1Level && !isCard2Level) return 1;
+  if (!isCard1Level && isCard2Level) return -1;
+
+  // 主花色处理
+  const isCard1MainSuit = mainSuit && card1.suit === mainSuit;
+  const isCard2MainSuit = mainSuit && card2.suit === mainSuit;
+
+  if (isCard1MainSuit && !isCard2MainSuit) return 1;
+  if (!isCard1MainSuit && isCard2MainSuit) return -1;
+
+  // 都是主花色或都是副牌，比较点数
+  const rank1Index = RANK_ORDER.indexOf(card1.rank);
+  const rank2Index = RANK_ORDER.indexOf(card2.rank);
+
+  return rank1Index - rank2Index;
+}
+
+/**
  * 对牌进行排序
  */
 export function sortCards(cards: Card[], mainRank?: Rank, mainSuit?: Suit): Card[] {
@@ -91,7 +143,7 @@ export function areCardsEqual(card1: Card, card2: Card): boolean {
  * 从手牌中移除指定的牌
  */
 export function removeCardsFromHand(hand: Card[], cardsToRemove: Card[]): Card[] {
-  return hand.filter(card => 
+  return hand.filter(card =>
     !cardsToRemove.some(toRemove => card.id === toRemove.id)
   );
 }

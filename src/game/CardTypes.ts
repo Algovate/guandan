@@ -1,7 +1,7 @@
 import type { Card, Play } from './types';
 import { PlayType, Rank, Suit } from './types';
 import { RANK_ORDER } from '../utils/constants';
-import { sortCards, compareCards } from '../utils/helpers';
+import { sortCards, compareCardValues } from '../utils/helpers';
 
 /**
  * 识别牌型
@@ -279,12 +279,12 @@ export function comparePlays(play1: Play, play2: Play, mainRank?: Rank, mainSuit
       return play1.cards.length - play2.cards.length;
     }
     // 牌数相同，比较大小
-    return compareCards(play1.cards[0], play2.cards[0], mainRank, mainSuit);
+    return compareCardValues(play1.cards[0], play2.cards[0], mainRank, mainSuit);
   }
 
   // 同花顺之间比较
   if (play1.type === PlayType.STRAIGHT_FLUSH && play2.type === PlayType.STRAIGHT_FLUSH) {
-    return compareCards(play1.cards[play1.cards.length - 1], play2.cards[play2.cards.length - 1], mainRank, mainSuit);
+    return compareCardValues(play1.cards[play1.cards.length - 1], play2.cards[play2.cards.length - 1], mainRank, mainSuit);
   }
 
   // 相同牌型才能比较
@@ -330,7 +330,7 @@ export function comparePlays(play1: Play, play2: Play, mainRank?: Rank, mainSuit
   const card1 = getMainCard(play1);
   const card2 = getMainCard(play2);
 
-  return compareCards(card1, card2, mainRank, mainSuit);
+  return compareCardValues(card1, card2, mainRank, mainSuit);
 }
 
 /**

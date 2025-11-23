@@ -7,6 +7,7 @@ import { ProbabilityAnalyzer } from './ProbabilityAnalyzer';
 import { MCTSEngine } from './MCTSEngine';
 import type { AIPersonality } from './AIPersonality';
 import { PersonalityType, getPersonality } from './AIPersonality';
+import { HandStructureAnalyzer } from './HandStructureAnalyzer';
 
 /**
  * 增强的策略引擎 - 整合所有AI模块
@@ -141,6 +142,27 @@ export class StrategyEngine {
     }
 
     // 默认策略：优先顺子，其次小牌
+    // 使用结构分析器来决定最佳出牌
+    const structure = HandStructureAnalyzer.analyze(hand, mainRank || undefined, mainSuit || undefined);
+    if (structure.plays.length > 0) {
+      // 优先出非炸弹的小牌
+      const nonBombs = structure.plays.filter(p => p.type !== PlayType.BOMB && p.type !== PlayType.FOUR_KINGS);
+      if (nonBombs.length > 0) {
+        // 排序：单张 < 对子 < 三张 < ...
+        // 同类型按大小排序
+        nonBombs.sort((a, b) => {
+          const typePriority = this.getLeadTypePriority(a.type) - this.getLeadTypePriority(b.type);
+          if (typePriority !== 0) return typePriority;
+          return comparePlays(a, b, mainRank || undefined, mainSuit || undefined);
+        });
+        return nonBombs[0].cards;
+      }
+
+      // 只有炸弹了，出最小的
+      structure.plays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
+      return structure.plays[0].cards;
+    }
+
     return this.findBalancedLeadPlay(possiblePlays, mainRank, mainSuit);
   }
 
@@ -244,37 +266,41 @@ export class StrategyEngine {
     // 保守型和均衡型AI使用价值评估
     if (personality.type === PersonalityType.CONSERVATIVE || personality.type === PersonalityType.BALANCED) {
       let bestPlay: Play | null = null;
-      let maxValue = -Infinity;
+      let minHandCount = Infinity; // 最小手数
 
-      // 评估当前手牌价值
-      const currentHandValue = HandEvaluator.evaluate(hand, mainRank || undefined, mainSuit || undefined).totalScore;
+      // 评估当前手数
+      const currentStructure = HandStructureAnalyzer.analyze(hand, mainRank || undefined, mainSuit || undefined);
+      const currentHandCount = currentStructure.handCount;
 
       for (const play of normalPlays) {
         // 模拟出牌后的剩余手牌
         const remainingHand = hand.filter(c => !play.cards.some(pc => pc.id === c.id));
-        const remainingScore = HandEvaluator.evaluate(remainingHand, mainRank || undefined, mainSuit || undefined).totalScore;
 
-        // 计算出牌的"代价" (Cost) = 当前价值 - 剩余价值
-        // 我们希望代价越小越好，或者说剩余价值越高越好
-        // 同时也要考虑出的牌本身的大小，避免用大牌管小牌 (Overkill)
+        // 分析剩余手牌结构
+        const remainingStructure = HandStructureAnalyzer.analyze(remainingHand, mainRank || undefined, mainSuit || undefined);
+        const remainingHandCount = remainingStructure.handCount;
 
-        // 简单的价值函数：剩余价值 - (出牌溢出价值 * 0.5)
-        // 这里简化为：最大化剩余价值
-
-        if (remainingScore > maxValue) {
-          maxValue = remainingScore;
+        // 我们希望手数越少越好
+        // 如果手数减少了，或者至少没有增加太多（考虑到必须管牌）
+        if (remainingHandCount < minHandCount) {
+          minHandCount = remainingHandCount;
           bestPlay = play;
+        } else if (remainingHandCount === minHandCount) {
+          // 手数相同，保留较大的牌（或者根据具体情况）
+          // 这里简单处理：保留大牌，所以出小牌
+          // normalPlays 已经按从小到大排序，所以第一个满足条件的通常是最小的
+          if (!bestPlay) bestPlay = play;
         }
       }
 
       if (bestPlay) {
-        // 如果最佳出牌会导致手牌结构严重破坏（价值大幅下降），可以选择过牌
-        // 比如为了管一个对3，拆了三个K
-        // 保守型更倾向于避免破坏手牌结构
-        const cost = currentHandValue - maxValue;
-        const costThreshold = personality.type === PersonalityType.CONSERVATIVE ? 15 : 20;
-        if (cost > costThreshold) {
-          return null;
+        // 如果最佳出牌导致手数显著增加（拆牌严重），可以选择过牌
+        // 比如为了管一个对3，把顺子拆了，手数从3变5
+        if (minHandCount > currentHandCount + 1) {
+          // 除非对手只剩很少牌了
+          if (opponentHandCount > 5) {
+            return null;
+          }
         }
         return bestPlay.cards;
       }
@@ -372,5 +398,21 @@ export class StrategyEngine {
     if (play.type === PlayType.BOMB || play.type === PlayType.FOUR_KINGS) return true;
     // 可以扩展：判断是否是大牌
     return false;
+  }
+
+  private static getLeadTypePriority(type: PlayType): number {
+    switch (type) {
+      case PlayType.SINGLE: return 1;
+      case PlayType.PAIR: return 2;
+      case PlayType.TRIPLE_WITH_PAIR: return 3;
+      case PlayType.TRIPLE: return 4;
+      case PlayType.STRAIGHT: return 5;
+      case PlayType.STRAIGHT_FLUSH: return 6;
+      case PlayType.PLATE: return 7;
+      case PlayType.TRIPLE_PAIR: return 8;
+      case PlayType.BOMB: return 9;
+      case PlayType.FOUR_KINGS: return 10;
+      default: return 0;
+    }
   }
 }

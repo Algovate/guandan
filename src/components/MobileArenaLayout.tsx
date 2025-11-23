@@ -7,7 +7,6 @@ import { SuitIcon } from './card/CardAssets';
 import { RANK_NAMES } from '../utils/constants';
 import { findPossiblePlays } from '../game/CardTypes';
 import { sortCards } from '../utils/helpers';
-import HandDetail from './HandDetail';
 import Toast from './Toast';
 
 export default function MobileArenaLayout() {
@@ -22,7 +21,6 @@ export default function MobileArenaLayout() {
     toastMessage,
   } = useGameStore();
 
-  const [showHandDetail, setShowHandDetail] = useState(false);
   const [handExpanded, setHandExpanded] = useState(true);
 
   if (!gameState) return null;
@@ -310,15 +308,6 @@ export default function MobileArenaLayout() {
           )}
         </AnimatePresence>
 
-        {/* 手牌详情按钮 */}
-        <div className="absolute bottom-2 right-2">
-          <button
-            onClick={() => setShowHandDetail(true)}
-            className="w-8 h-8 bg-black/60 rounded-full flex items-center justify-center text-white text-sm"
-          >
-            📋
-          </button>
-        </div>
       </div>
 
       {/* Toast通知 */}
@@ -330,12 +319,7 @@ export default function MobileArenaLayout() {
         />
       )}
 
-      {/* 手牌详情 */}
-      <HandDetail
-        cards={sortedHand}
-        isOpen={showHandDetail}
-        onClose={() => setShowHandDetail(false)}
-      />
+
     </div>
   );
 }

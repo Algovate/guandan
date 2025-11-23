@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import Card from './Card';
-import HandDetail from './HandDetail';
 import { findPossiblePlays } from '../game/CardTypes';
 import { sortCards } from '../utils/helpers';
 import { GamePhase, GameMode } from '../game/types';
@@ -84,7 +83,7 @@ export default function PlayerHand() {
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
 
-  const [showHandDetail, setShowHandDetail] = useState(false);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -224,16 +223,7 @@ export default function PlayerHand() {
         </div>
       </div>
 
-      {/* Controls Footer */}
-      <div className="absolute bottom-[180px] right-2 md:bottom-8 md:right-6 flex gap-2 z-50 pointer-events-auto">
-        <button
-          onClick={() => setShowHandDetail(true)}
-          className="bg-black/40 hover:bg-black/60 text-white p-2 md:p-3 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg"
-          title="View Hand Details"
-        >
-          <span className="text-lg md:text-xl">📋</span>
-        </button>
-      </div>
+
 
       {/* User Info Panel */}
       <div className="absolute bottom-[180px] left-2 md:bottom-8 md:left-6 z-50 pointer-events-auto flex items-center gap-4 origin-bottom-left scale-90 md:scale-100">
@@ -252,11 +242,7 @@ export default function PlayerHand() {
         </div>
       </div>
 
-      <HandDetail
-        cards={sortedHand}
-        isOpen={showHandDetail}
-        onClose={() => setShowHandDetail(false)}
-      />
+
     </div>
   );
 }
