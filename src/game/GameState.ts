@@ -192,9 +192,9 @@ export class GameStateManager {
 
     const isTeammate = lastPlayer && lastPlayer.team === player.team;
 
-    // 如果是队友出的牌，可以不出；否则检查是否有能压过的牌
-    if (!isTeammate) {
-      // 简化：允许不出
+    // 使用PlayValidator检查是否可以不出
+    if (!PlayValidator.canPass(player, this.state.lastPlay, isTeammate)) {
+      return { success: false, error: '您有能压过的牌，不能不出' };
     }
 
     // 记录不出

@@ -1,5 +1,5 @@
 import type { Card, Play, Player } from './types';
-import { createPlay, canBeat } from './CardTypes';
+import { createPlay, canBeat, findPossiblePlays } from './CardTypes';
 import { removeCardsFromHand } from '../utils/helpers';
 
 /**
@@ -58,7 +58,7 @@ export class PlayValidator {
    * @returns 是否可以不出
    */
   static canPass(
-    _player: Player,
+    player: Player,
     lastPlay: Play | null,
     isTeammateLastPlay: boolean
   ): boolean {
@@ -73,8 +73,12 @@ export class PlayValidator {
     }
 
     // 检查是否有能压过的牌
-    // 简化：总是允许不出（实际应该检查是否有能压过的牌）
-    return true;
+    // 如果玩家有能压过上家的牌，则不能不出（必须出牌）
+    const possiblePlays = findPossiblePlays(player.hand, lastPlay);
+    const beatingPlays = possiblePlays.filter(play => canBeat(play, lastPlay));
+    
+    // 如果没有能压过的牌，可以不出
+    return beatingPlays.length === 0;
   }
 
   /**
