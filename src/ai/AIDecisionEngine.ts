@@ -87,12 +87,13 @@ export class AIDecisionEngine {
     const emotion = this.getEmotionState(player, gameState);
 
     // 使用改进的 Strategy Engine 进行决策
-    // 如果可用，传递概率分析器和记牌器
+    // 如果可用，传递概率分析器、记牌器和性格
     const cardsToPlay = StrategyEngine.decideMove(
       player,
       gameState,
       this.probabilityAnalyzer || undefined,
-      this.cardTracker || undefined
+      this.cardTracker || undefined,
+      this.personality
     );
 
     let play: Play | null = null;
@@ -108,10 +109,13 @@ export class AIDecisionEngine {
     }
 
     // 如果使用了分析器，更新记牌器
-    if (play && this.cardTracker) {
-      const playerIndex = gameState.players.findIndex(p => p.id === player.id);
-      if (playerIndex >= 0) {
-        this.cardTracker.trackPlayedCards(play.cards, playerIndex);
+    const playerIndex = gameState.players.findIndex(p => p.id === player.id);
+    if (playerIndex >= 0 && this.cardTracker) {
+      if (play) {
+        this.cardTracker.trackPlayedCards(play.cards, playerIndex, play);
+      } else if (pass) {
+        // 记录过牌行为
+        this.cardTracker.trackPass(playerIndex, gameState.lastPlay);
       }
     }
 

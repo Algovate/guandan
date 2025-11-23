@@ -4,6 +4,8 @@ import { findPossiblePlays, comparePlays, canBeat } from '../CardTypes';
 import { HandEvaluator } from './HandEvaluator';
 import { ProbabilityAnalyzer } from './ProbabilityAnalyzer';
 import { CardTracker } from './CardTracker';
+import { MCTSEngine } from './MCTSEngine';
+import type { AIPersonality } from './AIPersonality';
 
 /**
  * Strategy Engine - Main AI decision making logic
@@ -16,12 +18,14 @@ export class StrategyEngine {
    * @param gameState 游戏状态
    * @param probabilityAnalyzer 概率分析器（可选）
    * @param cardTracker 记牌器（可选）
+   * @param personality AI性格（可选）
    */
   static decideMove(
     player: Player,
     gameState: GameState,
     probabilityAnalyzer?: ProbabilityAnalyzer,
-    cardTracker?: CardTracker
+    cardTracker?: CardTracker,
+    personality?: AIPersonality
   ): Card[] | null {
     const { lastPlay, lastPlayPlayerIndex, players } = gameState;
     const hand = player.hand;
@@ -32,6 +36,9 @@ export class StrategyEngine {
     const handScore = HandEvaluator.evaluate(hand);
     const isStrongHand = handScore.totalScore > 300;
     const hasControlCards = handScore.controlCount >= 3;
+    
+    // 确定游戏阶段（开局/中局/残局）
+    const gamePhase = this.determineGamePhase(gameState);
 
     // Determine if last play was from teammate
     const isTeammateLastPlay = lastPlay && lastPlayPlayerIndex >= 0 &&
@@ -69,6 +76,32 @@ export class StrategyEngine {
       return null; // Cannot beat, must pass
     }
 
+    // 判断是否应该使用MCTS深度搜索
+    const shouldUseMCTS = this.shouldUseMCTS(player, gameState, beatingPlays.length);
+    
+    // 如果应该使用MCTS，进行深度搜索
+    if (shouldUseMCTS) {
+      const mctsResult = this.useMCTSForDecision(player, gameState);
+      if (mctsResult) {
+        // MCTS返回的结果作为参考，但仍需要与概率分析结合
+        // 如果MCTS结果在可选出牌中，优先考虑
+        const mctsPlay = beatingPlays.find(p => 
+          p.cards.length === mctsResult.length &&
+          p.cards.every((card, idx) => card.id === mctsResult[idx]?.id)
+        );
+        if (mctsPlay && probabilityAnalyzer) {
+          // 验证MCTS结果的风险
+          const playerIndex = players.findIndex(p => p.id === player.id);
+          if (playerIndex >= 0) {
+            const risk = probabilityAnalyzer.evaluatePlayRisk(mctsPlay, gameState, playerIndex);
+            if (risk.shouldPlay || hand.length <= 5) {
+              return mctsPlay.cards;
+            }
+          }
+        }
+      }
+    }
+
     // 使用概率分析进行风险评估
     if (probabilityAnalyzer && cardTracker) {
       const playerIndex = players.findIndex(p => p.id === player.id);
@@ -81,13 +114,18 @@ export class StrategyEngine {
           // 计算综合得分
           let score = 0;
           
-          // 风险评估：风险越低越好
+          // 风险评估：风险越低越好（根据性格调整）
+          let riskWeight = 30;
+          if (personality) {
+            riskWeight *= personality.riskTolerance; // 激进型更容忍风险
+          }
+          
           if (risk.riskLevel === 'low') {
-            score += 30;
+            score += riskWeight;
           } else if (risk.riskLevel === 'medium') {
-            score += 10;
+            score += riskWeight * 0.33;
           } else {
-            score -= 20; // 高风险
+            score -= riskWeight * 0.67; // 高风险
           }
           
           // 胜率：胜率越高，越应该出牌
@@ -100,20 +138,34 @@ export class StrategyEngine {
             score += 15;
           }
           
-          // 炸弹策略：如果不是炸弹，且对手可能有大牌，考虑使用炸弹
+          // 炸弹策略：根据性格调整
           if (play.type === PlayType.BOMB || play.type === PlayType.FOUR_KINGS) {
             const shouldUseBomb = probabilityAnalyzer.shouldUseBomb(gameState, player, play);
+            let bombScore = 0;
             if (shouldUseBomb) {
-              score += 40; // 应该使用炸弹
+              bombScore = 40; // 应该使用炸弹
             } else {
-              score -= 30; // 不应该使用炸弹，保留
+              bombScore = -30; // 不应该使用炸弹，保留
             }
+            
+            // 根据性格调整：激进型更容易用炸弹，保守型更谨慎
+            if (personality) {
+              bombScore *= (1 - personality.bombThreshold); // 门槛越低，越容易用
+            }
+            score += bombScore;
           }
           
-          // 队友能帮助：如果队友能接牌，可以更激进
+          // 队友能帮助：如果队友能接牌，可以更激进（配合型更重视）
           if (risk.teammateCanHelpProbability > 0.6) {
-            score += 15;
+            let helpScore = 15;
+            if (personality) {
+              helpScore *= personality.teamworkPriority; // 配合型更重视队友
+            }
+            score += helpScore;
           }
+          
+          // 根据游戏阶段调整策略
+          score = this.adjustScoreByGamePhase(score, gamePhase, personality);
           
           return { play, score, risk };
         });
@@ -272,4 +324,107 @@ export class StrategyEngine {
     // Fallback: play first available
     return possiblePlays[0].cards;
   }
+
+  /**
+   * 判断是否应该使用MCTS进行深度搜索
+   * 在关键时刻使用：手牌少、关键决策点等
+   */
+  private static shouldUseMCTS(
+    player: Player,
+    gameState: GameState,
+    possiblePlaysCount: number
+  ): boolean {
+    // 1. 手牌很少时（<= 8张），使用MCTS
+    if (player.hand.length <= 8) {
+      return true;
+    }
+
+    // 2. 关键时刻：有人快走完
+    const minCards = Math.min(...gameState.players.map(p => p.hand.length));
+    if (minCards <= 5) {
+      return true;
+    }
+
+    // 3. 可选出牌较少时（<= 3个），使用MCTS深度分析
+    if (possiblePlaysCount <= 3 && possiblePlaysCount > 0) {
+      return true;
+    }
+
+    // 4. 游戏后期（已出牌数 > 60）
+    const totalCards = 108; // 两副牌
+    const estimatedPlayedCards = totalCards - gameState.players.reduce((sum, p) => sum + p.hand.length, 0);
+    if (estimatedPlayedCards > 60) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 使用MCTS进行决策
+   */
+  private static useMCTSForDecision(
+    player: Player,
+    gameState: GameState
+  ): Card[] | null {
+    try {
+      const mctsEngine = new MCTSEngine();
+      // 根据手牌数调整时间限制
+      const timeLimit = player.hand.length <= 5 ? 2000 : 1000;
+      const result = mctsEngine.search(gameState, timeLimit);
+      return result;
+    } catch (error) {
+      // MCTS失败时回退到常规策略
+      console.warn('MCTS search failed, falling back to regular strategy:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 确定游戏阶段
+   */
+  private static determineGamePhase(gameState: GameState): 'early' | 'mid' | 'late' {
+    const totalCards = 108;
+    const totalRemainingCards = gameState.players.reduce((sum, p) => sum + p.hand.length, 0);
+    const playedCards = totalCards - totalRemainingCards;
+    const progress = playedCards / totalCards;
+
+    if (progress < 0.3) return 'early';  // 开局
+    if (progress < 0.7) return 'mid';    // 中局
+    return 'late';                        // 残局
+  }
+
+  /**
+   * 根据游戏阶段调整得分
+   */
+  private static adjustScoreByGamePhase(
+    score: number,
+    phase: 'early' | 'mid' | 'late',
+    personality?: AIPersonality
+  ): number {
+    let multiplier = 1.0;
+
+    switch (phase) {
+      case 'early':
+        // 开局：保守一些，保留大牌
+        multiplier = 0.9;
+        break;
+      case 'mid':
+        // 中局：正常策略
+        multiplier = 1.0;
+        break;
+      case 'late':
+        // 残局：更激进，尽快出完
+        multiplier = 1.2;
+        break;
+    }
+
+    // 根据性格调整
+    if (personality) {
+      multiplier *= (0.8 + personality.aggressiveness * 0.4); // 0.8-1.2之间
+    }
+
+    return score * multiplier;
+  }
+
 }

@@ -104,6 +104,39 @@ export class ProbabilityAnalyzer {
         if (opponentNearWin) {
             probability -= 0.12; // 对手即将走完
         }
+        
+        // 7. 牌型优势评估（新增）
+        const myHandStructure = this.analyzeHandStructure(player.hand);
+        const teammateHandStructure = this.analyzeHandStructure(teammate.hand);
+        const myTeamStructureScore = myHandStructure + teammateHandStructure;
+        
+        // 估算对手牌型（使用CardTracker的推断）
+        let opponentStructureScore = 0;
+        opponentIndices.forEach(idx => {
+            const inference = this.cardTracker.inferHandStructure(idx, gameState);
+            opponentStructureScore += inference.likelyBombs * 20 + 
+                                     inference.likelyStraights * 10 +
+                                     inference.likelyTriples * 5 +
+                                     (inference.hasControlCards ? 10 : 0);
+        });
+        
+        if (myTeamStructureScore > opponentStructureScore) {
+            probability += 0.05; // 牌型优势
+        } else if (myTeamStructureScore < opponentStructureScore * 0.7) {
+            probability -= 0.05; // 牌型劣势
+        }
+        
+        // 8. 控制权深度分析（新增）
+        // 如果连续多轮有控制权，优势更大
+        if (gameState.lastPlayPlayerIndex === playerIndex ||
+            gameState.lastPlayPlayerIndex === teammateIndex) {
+            // 检查是否连续控制
+            const recentHistory = this.getRecentPlayHistory(gameState);
+            const consecutiveControl = this.countConsecutiveControl(recentHistory, playerIndex, teammateIndex);
+            if (consecutiveControl >= 2) {
+                probability += 0.03 * consecutiveControl; // 连续控制奖励
+            }
+        }
 
         // 限制在 0-1 范围
         return Math.max(0, Math.min(1, probability));
@@ -173,48 +206,160 @@ export class ProbabilityAnalyzer {
     }
 
     /**
-     * 判断是否应该使用炸弹
+     * 判断是否应该使用炸弹（改进版）
      */
     shouldUseBomb(
         gameState: GameState,
         player: Player,
-        _bombPlay: Play
+        bombPlay: Play
     ): boolean {
         const playerIndex = gameState.players.findIndex(p => p.id === player.id);
         if (playerIndex === -1) return false;
 
         const opponentIndices = this.getOpponentIndices(playerIndex);
+        const teammateIndex = (playerIndex + 2) % 4;
 
-        // 1. 对手即将走完（剩余牌数 <= 3）
+        // 1. 对手即将走完（剩余牌数 <= 3）- 最高优先级
         const hasOpponentNearWin = opponentIndices.some(idx =>
             this.cardTracker.getPlayerCardCount(idx) <= 3
         );
-        if (hasOpponentNearWin) return true;
+        if (hasOpponentNearWin) {
+            // 如果对手只剩1-2张，必须用炸弹阻止
+            const criticalOpponent = opponentIndices.find(idx =>
+                this.cardTracker.getPlayerCardCount(idx) <= 2
+            );
+            if (criticalOpponent !== undefined) {
+                return true;
+            }
+        }
 
         // 2. 自己即将走完（剩余牌数 <= 5）
-        if (player.hand.length <= 5) return true;
+        if (player.hand.length <= 5) {
+            // 如果使用炸弹后能走完，优先使用
+            if (player.hand.length - bombPlay.cards.length <= 0) {
+                return true;
+            }
+            // 如果队友也快走完，可以更激进
+            const teammate = gameState.players[teammateIndex];
+            if (teammate.hand.length <= 5) {
+                return true;
+            }
+        }
 
-        // 3. 胜率分析
+        // 3. 胜率分析（更细致的判断）
         const winProb = this.calculateWinProbability(gameState, player);
-        if (winProb < 0.3) {
-            // 劣势时，炸弹可能是转机
+        if (winProb < 0.25) {
+            // 严重劣势时，炸弹可能是转机
             return true;
         }
-        if (winProb > 0.7) {
-            // 优势时，保留炸弹可能更好
-            return false;
+        if (winProb > 0.75) {
+            // 明显优势时，保留炸弹可能更好（除非能直接获胜）
+            if (player.hand.length > 8) {
+                return false;
+            }
         }
 
-        // 4. 对手可能有更大的炸弹
-        const opponentBombCount = opponentIndices.reduce((sum, idx) =>
-            sum + this.cardTracker.estimateBombCount(idx, gameState), 0
-        );
-        if (opponentBombCount > 1) {
-            // 对手炸弹多，尽早用掉
+        // 4. 对手炸弹分析（使用牌型推断）
+        let opponentBombCount = 0;
+        let opponentHasBiggerBomb = false;
+        opponentIndices.forEach(idx => {
+            const inference = this.cardTracker.inferHandStructure(idx, gameState);
+            opponentBombCount += inference.likelyBombs;
+            // 检查对手是否有更大的炸弹
+            if (bombPlay.type === PlayType.BOMB && bombPlay.cards.length < 6) {
+                // 如果对手可能有6张以上的炸弹，我们的炸弹可能被压
+                if (inference.likelyBombs > 1) {
+                    opponentHasBiggerBomb = true;
+                }
+            }
+        });
+        
+        if (opponentBombCount > 1.5) {
+            // 对手炸弹多，尽早用掉（避免被更大的炸弹压）
             return true;
+        }
+        
+        if (opponentHasBiggerBomb && bombPlay.cards.length < 6) {
+            // 对手可能有更大的炸弹，小炸弹应该尽早用
+            return true;
+        }
+
+        // 5. 当前出牌的重要性（新增）
+        // 如果当前出的是关键牌（如大牌、组合牌），用炸弹保护
+        if (gameState.lastPlay) {
+            const lastPlayType = gameState.lastPlay.type;
+            // 如果对手出了大牌型，考虑用炸弹
+            if (lastPlayType === PlayType.STRAIGHT_FLUSH || 
+                lastPlayType === PlayType.BOMB ||
+                (lastPlayType === PlayType.STRAIGHT && gameState.lastPlay.cards.length >= 5)) {
+                // 如果队友接不了，且我们有炸弹，考虑使用
+                const teammateCanHelp = this.estimateTeammateCanHelp(
+                    gameState.lastPlay,
+                    teammateIndex,
+                    gameState
+                );
+                if (teammateCanHelp < 0.4 && winProb < 0.6) {
+                    return true;
+                }
+            }
+        }
+
+        // 6. 炸弹大小考虑（新增）
+        // 小炸弹（4张）应该更早使用，大炸弹（6张+）可以保留
+        if (bombPlay.type === PlayType.FOUR_KINGS) {
+            // 四王应该谨慎使用，除非关键时刻
+            return hasOpponentNearWin || player.hand.length <= 3;
+        }
+        
+        if (bombPlay.cards.length >= 6) {
+            // 大炸弹可以保留更久
+            if (winProb > 0.5 && player.hand.length > 8) {
+                return false;
+            }
         }
 
         return false;
+    }
+    
+    /**
+     * 分析手牌结构得分（辅助方法）
+     */
+    private analyzeHandStructure(hand: Card[]): number {
+        // 简化：基于手牌数、炸弹数等
+        let score = 0;
+        const bombCount = this.estimatePlayerBombs(hand);
+        score += bombCount * 20;
+        score += (27 - hand.length) * 2; // 手牌越少越好
+        return score;
+    }
+    
+    /**
+     * 获取最近的出牌历史（辅助方法）
+     */
+    private getRecentPlayHistory(_gameState: GameState): Array<{ playerIndex: number; hasPlay: boolean }> {
+        // 简化实现：返回最近几轮的信息
+        // 实际可以从gameState.playHistory或CardTracker获取
+        return [];
+    }
+    
+    /**
+     * 计算连续控制轮数（辅助方法）
+     */
+    private countConsecutiveControl(
+        history: Array<{ playerIndex: number; hasPlay: boolean }>,
+        playerIndex: number,
+        teammateIndex: number
+    ): number {
+        let count = 0;
+        for (let i = history.length - 1; i >= 0; i--) {
+            if (history[i].hasPlay && 
+                (history[i].playerIndex === playerIndex || history[i].playerIndex === teammateIndex)) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        return count;
     }
 
     /**
@@ -319,13 +464,44 @@ export class ProbabilityAnalyzer {
             }
         }
 
-        // 4. 根据已出牌情况调整（如果对手之前出过类似牌型，可能还有）
-        // 这里可以扩展：分析对手出牌历史
+        // 4. 根据对手出牌历史模式调整（使用CardTracker的新功能）
+        const opponentPattern = this.cardTracker.getPlayerPattern(opponentIndex);
+        if (opponentPattern.isAggressive) {
+            // 激进型对手更可能压牌
+            probability += 0.1;
+        } else if (opponentPattern.isConservative) {
+            // 保守型对手可能不会轻易压牌
+            probability -= 0.1;
+        }
+        
+        // 如果对手对这种牌型经常过牌，降低被压概率
+        // 这里可以通过CardTracker的passOnPlayTypes来获取更精确的数据
+        // 暂时使用简化版本
+        // const passOnThisType = this.cardTracker.getPlayerPattern(opponentIndex);
 
         // 5. 根据牌的大小调整（大牌更难被压）
-        // 简化处理：如果出的是较大的牌，降低被压概率
-        if (play.type !== PlayType.BOMB && play.type !== PlayType.FOUR_KINGS) {
-            // 这里可以进一步分析牌的大小，暂时简化
+        if (play.type !== PlayType.BOMB && play.type !== PlayType.FOUR_KINGS && play.cards.length > 0) {
+            // 评估牌的大小（简化：使用第一张牌的rank）
+            const cardRank = play.cards[0].rank;
+            const rankOrder = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+            const rankIndex = rankOrder.indexOf(cardRank);
+            if (rankIndex >= 8) { // K, A, 2 等大牌
+                probability -= 0.1;
+            } else if (rankIndex <= 3) { // 3, 4, 5, 6 等小牌
+                probability += 0.1;
+            }
+        }
+        
+        // 6. 使用牌型推断来更精确评估
+        const handInference = this.cardTracker.inferHandStructure(opponentIndex, gameState);
+        if (handInference.hasControlCards) {
+            // 对手有控制牌，可能能压
+            probability += 0.1 * handInference.confidence;
+        }
+        if (handInference.likelyBombs > 0 && 
+            (play.type === PlayType.BOMB || play.type === PlayType.FOUR_KINGS)) {
+            // 对手可能有炸弹，炸弹对炸弹
+            probability += handInference.likelyBombs * 0.15;
         }
 
         return Math.max(0, Math.min(1, probability));

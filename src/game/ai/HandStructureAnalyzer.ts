@@ -102,9 +102,75 @@ export class HandStructureAnalyzer {
     }
 
     private static extractStraightFlushes(hand: Card[]): { plays: Play[], remaining: Card[] } {
-        // Simplified: Check for 5 consecutive same-suit cards
-        // This is complex, implementing a basic greedy check
-        return { plays: [], remaining: hand }; // Placeholder for now
+        const plays: Play[] = [];
+        let remaining = [...hand];
+
+        // 过滤掉王（王不能组成同花顺）
+        const potentialCards = remaining.filter(c => c.suit !== Suit.JOKER);
+
+        // 按花色分组
+        const suitGroups = new Map<Suit, Card[]>();
+        potentialCards.forEach(card => {
+            if (!suitGroups.has(card.suit)) {
+                suitGroups.set(card.suit, []);
+            }
+            suitGroups.get(card.suit)!.push(card);
+        });
+
+        // 对每个花色查找同花顺
+        suitGroups.forEach((cards) => {
+            // 按rank排序
+            const sortedCards = cards.sort((a, b) => 
+                RANK_ORDER.indexOf(a.rank) - RANK_ORDER.indexOf(b.rank)
+            );
+
+            // 查找连续5张
+            for (let i = 0; i <= sortedCards.length - 5; i++) {
+                const candidate = sortedCards.slice(i, i + 5);
+                
+                // 检查是否连续
+                let isConsecutive = true;
+                for (let j = 1; j < 5; j++) {
+                    const prevRank = candidate[j - 1].rank;
+                    const currRank = candidate[j].rank;
+                    const prevIdx = RANK_ORDER.indexOf(prevRank);
+                    const currIdx = RANK_ORDER.indexOf(currRank);
+                    
+                    // 跳过王的位置
+                    if (prevIdx === -1 || currIdx === -1 || 
+                        prevRank === Rank.JOKER_SMALL || prevRank === Rank.JOKER_BIG ||
+                        currRank === Rank.JOKER_SMALL || currRank === Rank.JOKER_BIG) {
+                        isConsecutive = false;
+                        break;
+                    }
+                    
+                    if (currIdx !== prevIdx + 1) {
+                        isConsecutive = false;
+                        break;
+                    }
+                }
+
+                if (isConsecutive) {
+                    const play = createPlay(candidate);
+                    if (play && play.type === 'straight_flush') {
+                        plays.push(play);
+                        // 移除已使用的牌
+                        candidate.forEach(c => {
+                            const index = remaining.findIndex(rc => rc.id === c.id);
+                            if (index !== -1) remaining.splice(index, 1);
+                        });
+                        
+                        // 递归查找剩余的同花顺
+                        const result = this.extractStraightFlushes(remaining);
+                        plays.push(...result.plays);
+                        remaining = result.remaining;
+                        return { plays, remaining };
+                    }
+                }
+            }
+        });
+
+        return { plays, remaining };
     }
 
     private static extractPlates(hand: Card[]): { plays: Play[], remaining: Card[] } {
@@ -142,8 +208,69 @@ export class HandStructureAnalyzer {
     }
 
     private static extractTriplePairs(hand: Card[]): { plays: Play[], remaining: Card[] } {
-        // Similar to plates but for pairs
-        return { plays: [], remaining: hand }; // Placeholder
+        const plays: Play[] = [];
+        let remaining = [...hand];
+
+        // 按rank分组
+        const rankGroups = this.groupCardsByRank(remaining);
+        
+        // 找出所有对子
+        const pairRanks: Rank[] = [];
+        rankGroups.forEach((cards, rank) => {
+            if (cards.length >= 2) {
+                pairRanks.push(rank);
+            }
+        });
+
+        // 按rank顺序排序
+        pairRanks.sort((a, b) => RANK_ORDER.indexOf(a) - RANK_ORDER.indexOf(b));
+
+        // 查找连续的三对（三连对需要恰好6张牌，即3对）
+        for (let i = 0; i <= pairRanks.length - 3; i++) {
+            const r1 = pairRanks[i];
+            const r2 = pairRanks[i + 1];
+            const r3 = pairRanks[i + 2];
+
+            // 检查是否连续
+            const idx1 = RANK_ORDER.indexOf(r1);
+            const idx2 = RANK_ORDER.indexOf(r2);
+            const idx3 = RANK_ORDER.indexOf(r3);
+
+            // 跳过王（王不能组成三连对）
+            if (r1 === Rank.JOKER_SMALL || r1 === Rank.JOKER_BIG ||
+                r2 === Rank.JOKER_SMALL || r2 === Rank.JOKER_BIG ||
+                r3 === Rank.JOKER_SMALL || r3 === Rank.JOKER_BIG) {
+                continue;
+            }
+
+            if (idx1 !== -1 && idx2 !== -1 && idx3 !== -1 &&
+                idx2 === idx1 + 1 && idx3 === idx2 + 1) {
+                // 组成三连对
+                const cards1 = rankGroups.get(r1)!.slice(0, 2); // 取前两张
+                const cards2 = rankGroups.get(r2)!.slice(0, 2);
+                const cards3 = rankGroups.get(r3)!.slice(0, 2);
+                
+                const triplePairCards = [...cards1, ...cards2, ...cards3];
+                const play = createPlay(triplePairCards);
+                
+                if (play && play.type === 'triple_pair') {
+                    plays.push(play);
+                    // 移除已使用的牌
+                    triplePairCards.forEach(c => {
+                        const index = remaining.findIndex(rc => rc.id === c.id);
+                        if (index !== -1) remaining.splice(index, 1);
+                    });
+                    
+                    // 递归查找剩余的三连对
+                    const result = this.extractTriplePairs(remaining);
+                    plays.push(...result.plays);
+                    remaining = result.remaining;
+                    return { plays, remaining };
+                }
+            }
+        }
+
+        return { plays, remaining };
     }
 
     private static extractStraights(hand: Card[]): { plays: Play[], remaining: Card[] } {
@@ -276,10 +403,57 @@ export class HandStructureAnalyzer {
     }
 
     private static calculateTotalValue(plays: Play[]): number {
-        // Simple heuristic
-        return plays.length * -10; // Fewer hands is better? No, this is value.
-        // Actually we want to minimize hand count.
-        // Value = Sum of play values
-        return 0;
+        // 计算手牌结构的总价值
+        // 价值越高越好（能快速出完的组合）
+        let totalValue = 0;
+        
+        plays.forEach(play => {
+            switch (play.type) {
+                case 'four_kings':
+                    totalValue += 100; // 四王价值最高
+                    break;
+                case 'bomb':
+                    totalValue += 50 + (play.cards.length - 4) * 10; // 炸弹越大价值越高
+                    break;
+                case 'straight_flush':
+                    totalValue += 40; // 同花顺
+                    break;
+                case 'plate':
+                    totalValue += 30; // 钢板
+                    break;
+                case 'triple_pair':
+                    totalValue += 25; // 三连对
+                    break;
+                case 'straight':
+                    totalValue += 15; // 顺子
+                    break;
+                case 'triple_with_pair':
+                    totalValue += 12; // 三带二
+                    break;
+                case 'triple':
+                    totalValue += 8; // 三张
+                    break;
+                case 'pair':
+                    totalValue += 4; // 对子
+                    break;
+                case 'single':
+                    totalValue += 1; // 单张
+                    break;
+            }
+        });
+        
+        // 手牌数越少越好，所以给予负的惩罚
+        totalValue -= plays.length * 2;
+        
+        return totalValue;
+    }
+    
+    /**
+     * 优化手牌结构分解
+     * 尝试多种分解方案，选择最优的
+     */
+    static analyzeOptimal(hand: Card[]): HandStructure {
+        // 当前使用贪心策略，未来可以扩展为尝试多种组合
+        return this.analyze(hand);
     }
 }
