@@ -190,7 +190,7 @@ export class GameStateManager {
       ? this.state.players[this.state.lastPlayPlayerIndex]
       : null;
 
-    const isTeammate = lastPlayer && lastPlayer.team === player.team;
+    const isTeammate = lastPlayer ? lastPlayer.team === player.team : false;
 
     // 使用PlayValidator检查是否可以不出
     if (!PlayValidator.canPass(player, this.state.lastPlay, isTeammate)) {
