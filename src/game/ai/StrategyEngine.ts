@@ -147,15 +147,28 @@ export class StrategyEngine {
     if (structure.plays.length > 0) {
       // 优先出非炸弹的小牌
       const nonBombs = structure.plays.filter(p => p.type !== PlayType.BOMB && p.type !== PlayType.FOUR_KINGS);
+
       if (nonBombs.length > 0) {
-        // 排序：单张 < 对子 < 三张 < ...
-        // 同类型按大小排序
-        nonBombs.sort((a, b) => {
-          const typePriority = this.getLeadTypePriority(a.type) - this.getLeadTypePriority(b.type);
-          if (typePriority !== 0) return typePriority;
-          return comparePlays(a, b, mainRank || undefined, mainSuit || undefined);
+        // 分类：垃圾牌 (Trash) < 牌型 (Pattern) < 控制牌 (Control)
+        // 垃圾牌：小单张 (< 10), 小对子 (< 10)
+        // 牌型：顺子, 钢板, 三张, 三带二
+        // 控制牌：大单张 (>= 10), 大对子 (>= 10), 炸弹 (已过滤)
+
+        const categorizedPlays = nonBombs.map(play => ({
+          play,
+          category: this.getPlayCategory(play, mainRank || undefined)
+        }));
+
+        // 排序优先级：Category (Trash < Pattern < Control) -> Size
+        categorizedPlays.sort((a, b) => {
+          if (a.category !== b.category) {
+            return a.category - b.category;
+          }
+          // 同类别按大小排序
+          return comparePlays(a.play, b.play, mainRank || undefined, mainSuit || undefined);
         });
-        return nonBombs[0].cards;
+
+        return categorizedPlays[0].play.cards;
       }
 
       // 只有炸弹了，出最小的
@@ -414,5 +427,58 @@ export class StrategyEngine {
       case PlayType.FOUR_KINGS: return 10;
       default: return 0;
     }
+  }
+
+  private static getPlayCategory(play: Play, mainRank?: any): number {
+    // 0: Trash (Small Single/Pair)
+    // 1: Pattern (Straight, Triple, etc.)
+    // 2: Control (Big Single/Pair)
+
+    const { type, cards } = play;
+    // Threshold for "Small" vs "Big"
+    // 10 (Rank.TEN) is usually the cutoff. < 10 is small.
+    // But we need to handle A, K, Q, J, 10 as big.
+    // getRankBaseValue: 2..9 -> 1, 10 -> 2, J -> 3, Q -> 4, K -> 5, A -> 6
+    // Wait, getRankBaseValue is in HandEvaluator, not here.
+    // Let's implement a simple one here or import.
+    // Actually, let's use RANK_ORDER index.
+
+    // Pattern plays are always good to lead
+    if (type === PlayType.STRAIGHT || type === PlayType.STRAIGHT_FLUSH ||
+      type === PlayType.PLATE || type === PlayType.TRIPLE ||
+      type === PlayType.TRIPLE_WITH_PAIR || type === PlayType.TRIPLE_PAIR) {
+      return 1;
+    }
+
+    // Single / Pair
+    if (type === PlayType.SINGLE || type === PlayType.PAIR) {
+      // Check if it's a big card
+      // J, Q, K, A, 2 (Level), Joker are big
+      // Simple check: if rank is J or higher, or is Main Rank
+
+      // Using Rank Enum values directly might be tricky as they are strings
+      // Use RANK_ORDER
+      // ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', 'SMALL_JOKER', 'BIG_JOKER']
+
+      const rankIndex = this.getRankIndex(cards[0].rank);
+      const tenIndex = 8; // Index of '10'
+
+      if (rankIndex >= tenIndex || cards[0].rank === mainRank) {
+        return 2; // Control
+      }
+      return 0; // Trash
+    }
+
+    return 2; // Default to Control (Bombs etc)
+  }
+
+  private static getRankIndex(rank: any): number {
+    const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', 'SMALL_JOKER', 'BIG_JOKER'];
+    return RANK_ORDER.indexOf(rank);
+  }
+
+  private static getRankBaseValue(_rank: any): number {
+    // Placeholder if needed, but getRankIndex is better
+    return 0;
   }
 }
