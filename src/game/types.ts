@@ -115,6 +115,7 @@ export interface GameState {
   teamNames: [string, string]; // 两个队伍的名称
   roundWinner: number | null;
   playHistory?: Play[];  // 出牌历史（可选）
+  currentTrick: { playerIndex: number; play: Play | null }[]; // 当前一轮的出牌记录
 }
 
 // AI难度

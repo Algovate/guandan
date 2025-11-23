@@ -16,18 +16,9 @@ export default function PlayArea() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (!gameState || !gameState.currentPlay) {
+  if (!gameState || !gameState.currentTrick || gameState.currentTrick.length === 0) {
     return null;
   }
-
-  const play = gameState.currentPlay;
-  const lastPlayer = gameState.lastPlayPlayerIndex >= 0
-    ? gameState.players[gameState.lastPlayPlayerIndex]
-    : null;
-
-  if (!lastPlayer) return null;
-
-  const position = lastPlayer.position;
 
   // 根据玩家位置确定出牌区域的位置
   const getPositionStyle = (pos: PlayerPosition) => {
@@ -56,72 +47,102 @@ export default function PlayArea() {
     }
   };
 
-  const containerClass = getPositionStyle(position);
-  const initialVariant = getInitialVariant(position);
-
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={play.cards.map(c => c.id).join(',')} // 只要牌变了就重新触发动画
-        className={`absolute z-20 flex flex-col items-center ${containerClass}`}
-        initial={initialVariant}
-        animate={{ x: 0, y: 0, opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
-        exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-        transition={{
-          type: "spring",
-          stiffness: 200,
-          damping: 20,
-          mass: 0.8
-        }}
-      >
-        {/* 玩家名字和牌型提示 */}
-        <div className="mb-2 md:mb-4 flex items-center gap-2 md:gap-3 glass-panel px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-xl scale-90 md:scale-100 origin-bottom">
-          <span className="text-gold-metallic font-serif font-bold text-sm md:text-base whitespace-nowrap">
-            {lastPlayer.name}
-          </span>
-          <span className="text-white/90 text-[10px] md:text-xs font-bold px-1.5 py-0.5 bg-white/10 rounded border border-white/10 tracking-wide">
-            {PLAY_TYPE_NAMES[play.type] || play.type}
-          </span>
-        </div>
+    <>
+      <AnimatePresence mode="popLayout">
+        {gameState.currentTrick.map((trickPlay, trickIndex) => {
+          const player = gameState.players[trickPlay.playerIndex];
+          if (!player) return null;
 
-        {/* 牌组显示 */}
-        <div className="flex items-center justify-center perspective-1000">
-          {play.cards.map((card, index) => (
+          const position = player.position;
+          const containerClass = getPositionStyle(position);
+          const initialVariant = getInitialVariant(position);
+          const play = trickPlay.play;
+
+          // 如果是"不出"，显示Pass
+          if (!play) {
+            return (
+              <motion.div
+                key={`pass-${trickIndex}-${player.id}`}
+                className={`absolute z-20 flex flex-col items-center ${containerClass}`}
+                initial={initialVariant}
+                animate={{ x: 0, y: 0, opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
+                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+              >
+                <div className="glass-panel px-4 py-2 rounded-full shadow-xl">
+                  <span className="text-white/60 font-serif font-bold text-sm md:text-base">
+                    不出
+                  </span>
+                </div>
+              </motion.div>
+            );
+          }
+
+          return (
             <motion.div
-              key={card.id}
-              className="origin-bottom"
-              style={{
-                marginLeft: index === 0 ? 0 : (isMobile ? '-2rem' : '-3rem'), // 负 margin 实现重叠
-                zIndex: index
-              }}
-              initial={{
-                opacity: 0,
-                scale: 0.8,
-                y: -20
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: Math.abs(index - (play.cards.length - 1) / 2) * (isMobile ? 1 : 2), // Arc shape
-                rotate: (index - (play.cards.length - 1) / 2) * (isMobile ? 2 : 3), // Fan spread
-              }}
+              key={`play-${trickIndex}-${player.id}-${play.cards.map(c => c.id).join(',')}`}
+              className={`absolute z-20 flex flex-col items-center ${containerClass}`}
+              initial={initialVariant}
+              animate={{ x: 0, y: 0, opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
+              exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
               transition={{
                 type: "spring",
-                stiffness: 250,
-                damping: 20
+                stiffness: 200,
+                damping: 20,
+                mass: 0.8
               }}
-              whileHover={{ scale: 1.1, zIndex: 100, y: -20, transition: { duration: 0.2 } }}
             >
-              <Card
-                card={card}
-                faceUp={true}
-                size={isMobile ? "sm" : "md"}
-                className="shadow-2xl ring-1 ring-black/20"
-              />
+              {/* 玩家名字和牌型提示 */}
+              <div className="mb-2 md:mb-4 flex items-center gap-2 md:gap-3 glass-panel px-3 py-1 md:px-4 md:py-1.5 rounded-full shadow-xl scale-90 md:scale-100 origin-bottom">
+                <span className="text-gold-metallic font-serif font-bold text-sm md:text-base whitespace-nowrap">
+                  {player.name}
+                </span>
+                <span className="text-white/90 text-[10px] md:text-xs font-bold px-1.5 py-0.5 bg-white/10 rounded border border-white/10 tracking-wide">
+                  {PLAY_TYPE_NAMES[play.type] || play.type}
+                </span>
+              </div>
+
+              {/* 牌组显示 */}
+              <div className="flex items-center justify-center perspective-1000">
+                {play.cards.map((card, index) => (
+                  <motion.div
+                    key={card.id}
+                    className="origin-bottom"
+                    style={{
+                      marginLeft: index === 0 ? 0 : (isMobile ? '-2rem' : '-3rem'), // 负 margin 实现重叠
+                      zIndex: index
+                    }}
+                    initial={{
+                      opacity: 0,
+                      scale: 0.8,
+                      y: -20
+                    }}
+                    animate={{
+                      opacity: 1,
+                      scale: 1,
+                      y: Math.abs(index - (play.cards.length - 1) / 2) * (isMobile ? 1 : 2), // Arc shape
+                      rotate: (index - (play.cards.length - 1) / 2) * (isMobile ? 2 : 3), // Fan spread
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 250,
+                      damping: 20
+                    }}
+                    whileHover={{ scale: 1.1, zIndex: 100, y: -20, transition: { duration: 0.2 } }}
+                  >
+                    <Card
+                      card={card}
+                      faceUp={true}
+                      size={isMobile ? "sm" : "md"}
+                      className="shadow-2xl ring-1 ring-black/20"
+                    />
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </AnimatePresence>
+          );
+        })}
+      </AnimatePresence>
+    </>
   );
 }

@@ -32,7 +32,7 @@ export class GameStateManager {
   private createInitialState(): GameState {
     // 随机选择两个队伍主题
     const [team0Theme, team1Theme] = selectRandomTeamThemes();
-    
+
     return {
       phase: GamePhase.WAITING,
       players: this.createPlayers(team0Theme, team1Theme),
@@ -48,6 +48,7 @@ export class GameStateManager {
       teamNames: [team0Theme.teamName, team1Theme.teamName],
       roundWinner: null,
       playHistory: [], // 初始化出牌历史
+      currentTrick: [], // 初始化当前轮出牌记录
     };
   }
 
@@ -80,6 +81,15 @@ export class GameStateManager {
       },
       {
         id: generateId(),
+        name: team0Theme.players[1],
+        position: PlayerPosition.BOTTOM,
+        hand: [],
+        isAI: false,
+        team: 0,
+        avatar: team0Theme.avatars?.[1] || '👤'
+      },
+      {
+        id: generateId(),
         name: team1Theme.players[1],
         position: PlayerPosition.RIGHT,
         hand: [],
@@ -87,15 +97,6 @@ export class GameStateManager {
         team: 1,
         avatar: team1Theme.avatars?.[1] || '👤',
         personality: getRandomPersonality().type
-      },
-      {
-        id: generateId(),
-        name: team0Theme.players[1],
-        position: PlayerPosition.BOTTOM,
-        hand: [],
-        isAI: false,
-        team: 0,
-        avatar: team0Theme.avatars?.[1] || '👤'
       },
     ];
   }
@@ -145,7 +146,7 @@ export class GameStateManager {
       'K': Rank.KING,
       'A': Rank.ACE,
     };
-    
+
     const mainRankForLevel = levelToRank[this.state.level];
     if (!mainRankForLevel) {
       // 默认使用A
@@ -205,6 +206,12 @@ export class GameStateManager {
     }
     this.state.playHistory.push(validation.play);
 
+    // 更新当前轮出牌记录
+    this.state.currentTrick.push({
+      playerIndex: playerIndex,
+      play: validation.play
+    });
+
     // 检查是否有人出完牌
     if (player.hand.length === 0) {
       this.endRound(playerIndex);
@@ -242,6 +249,12 @@ export class GameStateManager {
       // 简化：允许不出
     }
 
+    // 记录不出
+    this.state.currentTrick.push({
+      playerIndex: playerIndex,
+      play: null
+    });
+
     // 移动到下一个玩家
     this.moveToNextPlayer();
 
@@ -268,7 +281,10 @@ export class GameStateManager {
     if (this.state.currentPlayerIndex === this.state.lastPlayPlayerIndex && this.state.lastPlayPlayerIndex >= 0) {
       this.state.lastPlay = null;
       this.state.lastPlayPlayerIndex = -1;
+      this.state.lastPlay = null;
+      this.state.lastPlayPlayerIndex = -1;
       this.state.currentPlay = null;
+      this.state.currentTrick = []; // 重置当前轮出牌记录
     }
   }
 
@@ -288,7 +304,7 @@ export class GameStateManager {
     // 规则：从2打到A，2不必打，A必打
     // 如果打到A，必须一名为头游，另一名不能为末游，才可以最终算过A赢得本局
     const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
-    
+
     // 如果在A级，需要检查是否满足过A条件
     if (this.state.level === 'A') {
       // 简化实现：如果当前是A级且赢了，需要队友不是末游
@@ -312,7 +328,7 @@ export class GameStateManager {
   private startNextRound(): void {
     // 升级
     const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
-    
+
     // 2不必打，可以直接跳过
     if (this.state.level === '2') {
       // 如果当前是2级，直接升到3级（2不必打）
@@ -332,7 +348,9 @@ export class GameStateManager {
     this.state.currentPlayerIndex = 0;
     this.state.lastPlay = null;
     this.state.lastPlayPlayerIndex = -1;
+    this.state.lastPlayPlayerIndex = -1;
     this.state.currentPlay = null;
+    this.state.currentTrick = []; // 重置当前轮出牌记录
     this.state.roundWinner = null;
     this.state.mainSuit = null;
     this.state.mainRank = null;
