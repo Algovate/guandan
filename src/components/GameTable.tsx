@@ -6,12 +6,16 @@ import PlayerHand from './PlayerHand';
 import PlayArea from './PlayArea';
 import GameInfo from './GameInfo';
 import Toast from './Toast';
-import { PlayerPosition, GamePhase } from '../game/types';
+import PlayHistory from './PlayHistory';
+import AllHands from './AllHands';
+import { PlayerPosition, GamePhase, GameMode } from '../game/types';
 import MobileArenaLayout from './MobileArenaLayout';
 
 export default function GameTable() {
-  const { gameState, initGame, startGame, toastMessage, clearSelection } = useGameStore();
+  const { gameState, initGame, startGame, toastMessage, clearSelection, gameMode } = useGameStore();
   const [isMobile, setIsMobile] = useState(false);
+  const [showPlayHistory, setShowPlayHistory] = useState(false);
+  const [showAllHands, setShowAllHands] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -101,7 +105,10 @@ export default function GameTable() {
       </div>
 
       {/* 游戏信息 */}
-      <GameInfo />
+      <GameInfo 
+        onOpenPlayHistory={() => setShowPlayHistory(true)}
+        onOpenAllHands={() => setShowAllHands(true)}
+      />
 
       {/* AI玩家 */}
       {players.filter(p => p.isAI).map((player, index) => {
@@ -131,6 +138,24 @@ export default function GameTable() {
           type={toastMessage.type}
           onClose={() => useGameStore.setState({ toastMessage: null })}
         />
+      )}
+
+      {/* Teaching Mode Components */}
+      {gameMode === GameMode.TEACHING && gameState && (
+        <>
+          <PlayHistory
+            plays={gameState.playHistory || []}
+            isOpen={showPlayHistory}
+            onClose={() => setShowPlayHistory(false)}
+          />
+          <AllHands
+            players={gameState.players}
+            mainRank={gameState.mainRank || undefined}
+            mainSuit={gameState.mainSuit || undefined}
+            isOpen={showAllHands}
+            onClose={() => setShowAllHands(false)}
+          />
+        </>
       )}
 
       {/* 游戏结束界面 */}

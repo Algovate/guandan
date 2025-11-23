@@ -24,11 +24,17 @@ export default function PlayHistory({ plays, isOpen, onClose }: PlayHistoryProps
                         onClick={onClose}
                     />
                     <motion.div
-                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
+                        className="fixed z-50 w-full max-w-2xl max-h-[80vh] overflow-y-auto mx-4"
                         initial={{ scale: 0.9, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                        style={{ 
+                            position: 'fixed',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)'
+                        }}
                     >
                         <div className="glass rounded-3xl shadow-2xl border-2 border-accent-gold/40 p-6 md:p-8 relative overflow-hidden"
                             style={{

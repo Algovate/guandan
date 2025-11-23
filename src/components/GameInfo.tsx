@@ -4,7 +4,12 @@ import { RANK_NAMES } from '../utils/constants';
 import { GameMode } from '../game/types';
 import { SuitIcon } from './card/CardAssets';
 
-export default function GameInfo() {
+interface GameInfoProps {
+  onOpenPlayHistory?: () => void;
+  onOpenAllHands?: () => void;
+}
+
+export default function GameInfo({ onOpenPlayHistory, onOpenAllHands }: GameInfoProps) {
   const { gameState, toggleSettings, toggleTutorial, gameMode } = useGameStore();
 
   if (!gameState) return null;
@@ -90,18 +95,17 @@ export default function GameInfo() {
             </span>
           </motion.div>
         </motion.div>
-      </motion.div >
+      </motion.div>
 
       {/* 右上角：比分 + 功能按钮 */}
-      < motion.div
-        initial={{ opacity: 0, x: 20 }
-        }
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex items-start gap-2 md:gap-3 origin-top-right scale-90 md:scale-100"
+        className="absolute top-4 right-4 md:top-6 md:right-6 z-10 flex items-center gap-2 md:gap-3 origin-top-right scale-90 md:scale-100"
       >
         {/* 比分板 */}
-        < motion.div
+        <motion.div
           whileHover={{ scale: 1.02 }}
           className="glass-panel px-3 py-2 md:px-5 md:py-3 flex items-center gap-3 md:gap-4 rounded-2xl"
         >
@@ -122,10 +126,33 @@ export default function GameInfo() {
               <span className="text-white text-base md:text-lg font-bold font-display relative z-10">{gameState.teamScores[1]}</span>
             </div>
           </div>
-        </motion.div >
+        </motion.div>
 
         {/* 按钮组 */}
-        < div className="flex gap-2" >
+        <div className="flex items-center justify-center gap-2">
+          {/* Teaching Mode Features */}
+          {gameMode === GameMode.TEACHING && onOpenPlayHistory && onOpenAllHands && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onOpenPlayHistory}
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center text-white hover:bg-white/10 transition-colors border border-white/20"
+                title="出牌历史"
+              >
+                <span className="text-lg md:text-xl">📜</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onOpenAllHands}
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center text-white hover:bg-white/10 transition-colors border border-white/20"
+                title="查看各家手牌"
+              >
+                <span className="text-lg md:text-xl">👁️</span>
+              </motion.button>
+            </>
+          )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -145,8 +172,8 @@ export default function GameInfo() {
           >
             <span className="text-lg md:text-xl">⚙️</span>
           </motion.button>
-        </div >
-      </motion.div >
+        </div>
+      </motion.div>
     </>
   );
 }
