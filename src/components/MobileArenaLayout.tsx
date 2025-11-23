@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
-import { GamePhase } from '../game/types';
+import { GamePhase, GameMode } from '../game/types';
 import Card from './Card';
 import { SuitIcon } from './card/CardAssets';
 import { RANK_NAMES } from '../utils/constants';
 import { findPossiblePlays } from '../game/CardTypes';
 import { sortCards } from '../utils/helpers';
+import PlayHistory from './PlayHistory';
+import AllHands from './AllHands';
 import Toast from './Toast';
 
 export default function MobileArenaLayout() {
@@ -19,9 +21,12 @@ export default function MobileArenaLayout() {
     toggleSettings,
     toggleTutorial,
     toastMessage,
+    gameMode,
   } = useGameStore();
 
   const [handExpanded, setHandExpanded] = useState(true);
+  const [showPlayHistory, setShowPlayHistory] = useState(false);
+  const [showAllHands, setShowAllHands] = useState(false);
 
   if (!gameState) return null;
 
@@ -118,6 +123,25 @@ export default function MobileArenaLayout() {
 
           {/* 右侧：功能按钮 */}
           <div className="flex items-center gap-1.5">
+            {/* Teaching Mode Features */}
+            {gameMode === GameMode.TEACHING && (
+              <>
+                <button
+                  onClick={() => setShowPlayHistory(true)}
+                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm"
+                  title="出牌历史"
+                >
+                  📜
+                </button>
+                <button
+                  onClick={() => setShowAllHands(true)}
+                  className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm"
+                  title="查看各家手牌"
+                >
+                  👁️
+                </button>
+              </>
+            )}
             <button
               onClick={toggleTutorial}
               className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white text-sm"
@@ -319,6 +343,23 @@ export default function MobileArenaLayout() {
         />
       )}
 
+      {/* Teaching Mode Components */}
+      {gameMode === GameMode.TEACHING && (
+        <>
+          <PlayHistory
+            plays={gameState.playHistory || []}
+            isOpen={showPlayHistory}
+            onClose={() => setShowPlayHistory(false)}
+          />
+          <AllHands
+            players={gameState.players}
+            mainRank={gameState.mainRank || undefined}
+            mainSuit={gameState.mainSuit || undefined}
+            isOpen={showAllHands}
+            onClose={() => setShowAllHands(false)}
+          />
+        </>
+      )}
 
     </div>
   );

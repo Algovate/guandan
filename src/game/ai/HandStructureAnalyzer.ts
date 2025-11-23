@@ -141,7 +141,7 @@ export class HandStructureAnalyzer {
         return { plays, remaining };
     }
 
-    private static extractTriplePairs(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractTriplePairs(hand: Card[], _mainRank?: Rank, _mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
         // Similar to plates but for pairs
         return { plays: [], remaining: hand }; // Placeholder
     }
