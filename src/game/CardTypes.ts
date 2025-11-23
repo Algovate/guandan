@@ -225,7 +225,7 @@ function getPlayTypePriority(play: Play): number {
     case PlayType.FOUR_KINGS:
       return 100; // 最高
     case PlayType.BOMB:
-      if (play.cards.length >= 6) return 90; // 六张和六张以上炸弹
+      if (play.cards.length >= 6) return 90; // 六张及以上炸弹
       if (play.cards.length === 5) return 70; // 五张炸弹
       return 60; // 四张炸弹
     case PlayType.STRAIGHT_FLUSH:
@@ -252,7 +252,7 @@ function getPlayTypePriority(play: Play): number {
 /**
  * 比较两个Play的大小
  * @returns 正数表示play1大，负数表示play2大，0表示相等或无法比较
- * 规则：四王 > 六张和六张以上炸弹 > 同花顺 > 五张炸弹 > 四张炸弹 > 其它牌型
+ * 规则：四王 > 六张及以上炸弹 > 同花顺 > 五张炸弹 > 四张炸弹 > 其它牌型
  */
 export function comparePlays(play1: Play, play2: Play): number {
   const priority1 = getPlayTypePriority(play1);
