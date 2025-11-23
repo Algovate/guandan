@@ -57,8 +57,6 @@ export type PlayType = typeof PlayType[keyof typeof PlayType];
 export interface Play {
   type: PlayType;
   cards: Card[];
-  mainRank?: Rank; // 主牌等级（用于升级）
-  mainSuit?: Suit; // 主牌花色
 }
 
 // 玩家位置
@@ -108,8 +106,6 @@ export interface GameState {
   lastPlay: Play | null;
   lastPlayPlayerIndex: number;
   level: Level;
-  mainSuit: Suit | null;
-  mainRank: Rank | null;
   deck: Card[];
   teamScores: [number, number]; // 两个队伍的得分
   teamNames: [string, string]; // 两个队伍的名称

@@ -1,5 +1,5 @@
 import type { Card } from '../types';
-import { Rank, Suit, PlayType } from '../types';
+import { Rank, PlayType } from '../types';
 
 
 export interface HandScore {
@@ -13,7 +13,7 @@ export class HandEvaluator {
   /**
    * Evaluate the strength of a hand
    */
-  static evaluate(hand: Card[], mainRank?: Rank, mainSuit?: Suit): HandScore {
+  static evaluate(hand: Card[]): HandScore {
     let score = 0;
     let bombCount = 0;
     let controlCount = 0;
@@ -21,13 +21,11 @@ export class HandEvaluator {
 
     // 1. Base Card Value Scoring
     hand.forEach(card => {
-      const value = this.getCardValue(card, mainRank, mainSuit);
+      const value = this.getCardValue(card);
       score += value;
 
-      // Count controls (Jokers, Level Cards, Aces)
+      // Count controls (Jokers, Aces)
       if (card.rank === Rank.JOKER_BIG || card.rank === Rank.JOKER_SMALL) {
-        controlCount++;
-      } else if (mainRank && card.rank === mainRank) {
         controlCount++;
       } else if (card.rank === Rank.ACE) {
         controlCount++;
@@ -82,15 +80,13 @@ export class HandEvaluator {
     // This is hard to do perfectly without a full solver, but we can give a bonus for connected cards
     // ... (omitted for performance, relying on base card values and groups)
 
-    // Bonus for having many trumps
-    const trumpCount = hand.filter(c =>
-      (mainRank && c.rank === mainRank) ||
-      (mainSuit && c.suit === mainSuit) ||
+    // Bonus for having jokers
+    const jokerCount = hand.filter(c =>
       c.rank === Rank.JOKER_BIG ||
       c.rank === Rank.JOKER_SMALL
     ).length;
 
-    score += trumpCount * 3;
+    score += jokerCount * 5;
 
     // Penalty for single small cards (orphan cards)
     // Cards < 10 that are singles
@@ -111,21 +107,9 @@ export class HandEvaluator {
   /**
    * Get approximate value of a single card
    */
-  private static getCardValue(card: Card, mainRank?: Rank, mainSuit?: Suit): number {
+  private static getCardValue(card: Card): number {
     if (card.rank === Rank.JOKER_BIG) return 15;
     if (card.rank === Rank.JOKER_SMALL) return 12;
-
-    // Level Cards
-    if (mainRank && card.rank === mainRank) {
-      if (card.suit === Suit.HEART) return 10; // Heart Level
-      return 8; // Other Level
-    }
-
-    // Main Suit (Non-Level)
-    if (mainSuit && card.suit === mainSuit) {
-      // Main suit cards are slightly better than normal
-      return this.getRankBaseValue(card.rank) + 2;
-    }
 
     return this.getRankBaseValue(card.rank);
   }

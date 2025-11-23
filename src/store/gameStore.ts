@@ -35,7 +35,6 @@ interface GameStore {
   clearSelection: () => void;
   playCards: () => { success: boolean; error?: string }; // Modified signature
   pass: () => { success: boolean; error?: string };
-  callMain: () => void;
   setGameMode: (mode: GameMode) => void;
   getHint: () => void;
   toggleTutorial: () => void;
@@ -80,7 +79,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { gameManager } = get();
     if (!gameManager) return;
     gameManager.startNewGame();
-    gameManager.callMain();
     const newState = gameManager.getState();
     set({ gameState: newState });
 
@@ -139,7 +137,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
       // 显示成功提示
       if (selectedCards.length > 0) {
-        const play = createPlay(selectedCards, newState.mainRank || undefined, newState.mainSuit || undefined);
+        const play = createPlay(selectedCards);
         if (play) {
           get().showToast(`出牌成功：${PLAY_TYPE_NAMES[play.type] || ''}`, 'success');
         }
@@ -182,12 +180,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return result;
   },
 
-  callMain: () => {
-    const { gameManager } = get();
-    if (!gameManager) return;
-    gameManager.callMain();
-    set({ gameState: gameManager.getState() });
-  },
+
 
   setGameMode: (mode: GameMode) => {
     set({ gameMode: mode });
@@ -277,7 +270,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     // 为当前AI玩家创建或获取AI管理器（根据player的personality）
-    const personalityType = currentPlayer.personality 
+    const personalityType = currentPlayer.personality
       ? (currentPlayer.personality as PersonalityType)
       : undefined;
     const aiManager = new AIPlayerManager(personalityType);

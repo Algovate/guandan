@@ -6,10 +6,10 @@ import { sortCards, compareCardValues } from '../utils/helpers';
 /**
  * 识别牌型
  */
-export function identifyPlayType(cards: Card[], mainRank?: Rank, mainSuit?: Suit): PlayType | null {
+export function identifyPlayType(cards: Card[]): PlayType | null {
   if (cards.length === 0) return null;
 
-  const sortedCards = sortCards(cards, mainRank, mainSuit);
+  const sortedCards = sortCards(cards);
   const count = sortedCards.length;
 
   // 单张
@@ -51,7 +51,7 @@ export function identifyPlayType(cards: Card[], mainRank?: Rank, mainSuit?: Suit
 
   // 钢板（二个连续三张牌，不可超过2个，6张）
   if (count === 6) {
-    const plate = isPlate(sortedCards, mainRank);
+    const plate = isPlate(sortedCards);
     if (plate) {
       return PlayType.PLATE;
     }
@@ -59,7 +59,7 @@ export function identifyPlayType(cards: Card[], mainRank?: Rank, mainSuit?: Suit
 
   // 三连对（三对连续对牌，不可超过3对，6张）
   if (count === 6) {
-    const triplePair = isTriplePair(sortedCards, mainRank);
+    const triplePair = isTriplePair(sortedCards);
     if (triplePair) {
       return PlayType.TRIPLE_PAIR;
     }
@@ -86,7 +86,7 @@ export function identifyPlayType(cards: Card[], mainRank?: Rank, mainSuit?: Suit
 
   // 顺子（恰好5张连续，不可超过五张）
   if (count === 5) {
-    const straight = isStraight(sortedCards, mainRank);
+    const straight = isStraight(sortedCards);
     if (straight) {
       // 检查是否同花
       const isFlush = sortedCards.every(c => c.suit === sortedCards[0].suit);
@@ -103,7 +103,7 @@ export function identifyPlayType(cards: Card[], mainRank?: Rank, mainSuit?: Suit
 /**
  * 检查是否为顺子（恰好5张连续单牌）
  */
-function isStraight(cards: Card[], mainRank?: Rank): boolean {
+function isStraight(cards: Card[]): boolean {
   if (cards.length !== 5) return false;
 
   // 排除王
@@ -116,7 +116,7 @@ function isStraight(cards: Card[], mainRank?: Rank): boolean {
 
   const rankIndices = ranks
     .map(rank => ({ rank, index: RANK_ORDER.indexOf(rank) }))
-    .filter(({ rank, index }) => index !== -1 && rank !== mainRank) // 排除主牌
+    .filter(({ index }) => index !== -1)
     .map(({ index }) => index)
     .sort((a, b) => a - b);
 
@@ -137,7 +137,7 @@ function isStraight(cards: Card[], mainRank?: Rank): boolean {
 /**
  * 检查是否为三连对（三对连续对牌，不可超过3对）
  */
-function isTriplePair(cards: Card[], mainRank?: Rank): boolean {
+function isTriplePair(cards: Card[]): boolean {
   if (cards.length !== 6) return false;
 
   // 排除王
@@ -156,10 +156,10 @@ function isTriplePair(cards: Card[], mainRank?: Rank): boolean {
     if (count !== 2) return false;
   }
 
-  // 获取这三个rank并排除主牌
+  // 获取这三个rank
   const ranks = Array.from(rankCounts.keys())
     .map(rank => ({ rank, index: RANK_ORDER.indexOf(rank) }))
-    .filter(({ rank, index }) => index !== -1 && rank !== mainRank)
+    .filter(({ index }) => index !== -1)
     .map(({ index }) => index)
     .sort((a, b) => a - b);
 
@@ -172,7 +172,7 @@ function isTriplePair(cards: Card[], mainRank?: Rank): boolean {
 /**
  * 检查是否为钢板（二个连续三张牌，不可超过2个）
  */
-function isPlate(cards: Card[], mainRank?: Rank): boolean {
+function isPlate(cards: Card[]): boolean {
   if (cards.length !== 6) return false;
 
   // 排除王
@@ -191,10 +191,10 @@ function isPlate(cards: Card[], mainRank?: Rank): boolean {
     if (count !== 3) return false;
   }
 
-  // 获取这两个rank并排除主牌
+  // 获取这两个rank
   const ranks = Array.from(rankCounts.keys())
     .map(rank => ({ rank, index: RANK_ORDER.indexOf(rank) }))
-    .filter(({ rank, index }) => index !== -1 && rank !== mainRank)
+    .filter(({ index }) => index !== -1)
     .map(({ index }) => index)
     .sort((a, b) => a - b);
 
@@ -207,15 +207,13 @@ function isPlate(cards: Card[], mainRank?: Rank): boolean {
 /**
  * 创建Play对象
  */
-export function createPlay(cards: Card[], mainRank?: Rank, mainSuit?: Suit): Play | null {
-  const type = identifyPlayType(cards, mainRank, mainSuit);
+export function createPlay(cards: Card[]): Play | null {
+  const type = identifyPlayType(cards);
   if (!type) return null;
 
   return {
     type,
-    cards: sortCards(cards, mainRank, mainSuit),
-    mainRank: mainRank || undefined,
-    mainSuit: mainSuit || undefined,
+    cards: sortCards(cards),
   };
 }
 
@@ -256,7 +254,7 @@ function getPlayTypePriority(play: Play): number {
  * @returns 正数表示play1大，负数表示play2大，0表示相等或无法比较
  * 规则：四王 > 六张和六张以上炸弹 > 同花顺 > 五张炸弹 > 四张炸弹 > 其它牌型
  */
-export function comparePlays(play1: Play, play2: Play, mainRank?: Rank, mainSuit?: Suit): number {
+export function comparePlays(play1: Play, play2: Play): number {
   const priority1 = getPlayTypePriority(play1);
   const priority2 = getPlayTypePriority(play2);
 
@@ -279,12 +277,12 @@ export function comparePlays(play1: Play, play2: Play, mainRank?: Rank, mainSuit
       return play1.cards.length - play2.cards.length;
     }
     // 牌数相同，比较大小
-    return compareCardValues(play1.cards[0], play2.cards[0], mainRank, mainSuit);
+    return compareCardValues(play1.cards[0], play2.cards[0]);
   }
 
   // 同花顺之间比较
   if (play1.type === PlayType.STRAIGHT_FLUSH && play2.type === PlayType.STRAIGHT_FLUSH) {
-    return compareCardValues(play1.cards[play1.cards.length - 1], play2.cards[play2.cards.length - 1], mainRank, mainSuit);
+    return compareCardValues(play1.cards[play1.cards.length - 1], play2.cards[play2.cards.length - 1]);
   }
 
   // 相同牌型才能比较
@@ -330,14 +328,14 @@ export function comparePlays(play1: Play, play2: Play, mainRank?: Rank, mainSuit
   const card1 = getMainCard(play1);
   const card2 = getMainCard(play2);
 
-  return compareCardValues(card1, card2, mainRank, mainSuit);
+  return compareCardValues(card1, card2);
 }
 
 /**
  * 检查play1是否能压过play2
  */
-export function canBeat(play1: Play, play2: Play, mainRank?: Rank, mainSuit?: Suit): boolean {
-  const comparison = comparePlays(play1, play2, mainRank, mainSuit);
+export function canBeat(play1: Play, play2: Play): boolean {
+  const comparison = comparePlays(play1, play2);
   return comparison > 0;
 }
 
@@ -346,12 +344,10 @@ export function canBeat(play1: Play, play2: Play, mainRank?: Rank, mainSuit?: Su
  */
 export function findPossiblePlays(
   hand: Card[],
-  lastPlay: Play | null,
-  mainRank?: Rank,
-  mainSuit?: Suit
+  lastPlay: Play | null
 ): Play[] {
   const possiblePlays: Play[] = [];
-  const sortedHand = sortCards(hand, mainRank, mainSuit);
+  const sortedHand = sortCards(hand);
 
   // 如果没有上家出牌，可以出任意合法牌型
   if (!lastPlay) {
@@ -360,7 +356,7 @@ export function findPossiblePlays(
 
     // 单张
     sortedHand.forEach(card => {
-      const play = createPlay([card], mainRank, mainSuit);
+      const play = createPlay([card]);
       if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
         possiblePlays.push(play);
         checked.add(play.cards.map(c => c.id).join(','));
@@ -371,7 +367,7 @@ export function findPossiblePlays(
     for (let i = 0; i < sortedHand.length - 1; i++) {
       for (let j = i + 1; j < sortedHand.length; j++) {
         if (sortedHand[i].rank === sortedHand[j].rank) {
-          const play = createPlay([sortedHand[i], sortedHand[j]], mainRank, mainSuit);
+          const play = createPlay([sortedHand[i], sortedHand[j]]);
           if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
             possiblePlays.push(play);
             checked.add(play.cards.map(c => c.id).join(','));
@@ -385,7 +381,7 @@ export function findPossiblePlays(
       for (let j = i + 1; j < sortedHand.length - 1; j++) {
         for (let k = j + 1; k < sortedHand.length; k++) {
           if (sortedHand[i].rank === sortedHand[j].rank && sortedHand[j].rank === sortedHand[k].rank) {
-            const play = createPlay([sortedHand[i], sortedHand[j], sortedHand[k]], mainRank, mainSuit);
+            const play = createPlay([sortedHand[i], sortedHand[j], sortedHand[k]]);
             if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
               possiblePlays.push(play);
               checked.add(play.cards.map(c => c.id).join(','));
@@ -396,7 +392,6 @@ export function findPossiblePlays(
     }
 
     // 三带二
-    // 简化实现：找出所有三张和对子的组合
     const triples: Card[][] = [];
     const pairs: Card[][] = [];
 
@@ -421,7 +416,7 @@ export function findPossiblePlays(
     triples.forEach(triple => {
       pairs.forEach(pair => {
         if (triple[0].rank !== pair[0].rank) {
-          const play = createPlay([...triple, ...pair], mainRank, mainSuit);
+          const play = createPlay([...triple, ...pair]);
           if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
             possiblePlays.push(play);
             checked.add(play.cards.map(c => c.id).join(','));
@@ -430,23 +425,19 @@ export function findPossiblePlays(
       });
     });
 
-    // 钢板（二个连续三张牌，不可超过2个）
+    // 钢板（二个连续三张牌）
     for (let i = 0; i < triples.length - 1; i++) {
       for (let j = i + 1; j < triples.length; j++) {
         if (triples[i][0].rank !== triples[j][0].rank) {
           const rank1Index = RANK_ORDER.indexOf(triples[i][0].rank);
           const rank2Index = RANK_ORDER.indexOf(triples[j][0].rank);
-          // 排除主牌
-          if (mainRank && (triples[i][0].rank === mainRank || triples[j][0].rank === mainRank)) {
-            continue;
-          }
           if (rank1Index !== -1 && rank2Index !== -1) {
             const minIndex = Math.min(rank1Index, rank2Index);
             const maxIndex = Math.max(rank1Index, rank2Index);
             // 检查是否连续
             if (maxIndex === minIndex + 1) {
               const plateCards = [...triples[i], ...triples[j]];
-              const play = createPlay(plateCards, mainRank, mainSuit);
+              const play = createPlay(plateCards);
               if (play && play.type === PlayType.PLATE && !checked.has(play.cards.map(c => c.id).join(','))) {
                 possiblePlays.push(play);
                 checked.add(play.cards.map(c => c.id).join(','));
@@ -457,15 +448,11 @@ export function findPossiblePlays(
       }
     }
 
-    // 三连对（三对连续对牌，不可超过3对）
+    // 三连对
     for (let i = 0; i < pairs.length - 2; i++) {
       for (let j = i + 1; j < pairs.length - 1; j++) {
         for (let k = j + 1; k < pairs.length; k++) {
           const ranks = [pairs[i][0].rank, pairs[j][0].rank, pairs[k][0].rank];
-          // 排除主牌
-          if (mainRank && ranks.includes(mainRank)) {
-            continue;
-          }
           // 检查是否三个不同的rank
           if (ranks[0] !== ranks[1] && ranks[1] !== ranks[2] && ranks[0] !== ranks[2]) {
             const rankIndices = ranks
@@ -476,7 +463,7 @@ export function findPossiblePlays(
               // 检查是否连续
               if (rankIndices[1] === rankIndices[0] + 1 && rankIndices[2] === rankIndices[1] + 1) {
                 const triplePairCards = [...pairs[i], ...pairs[j], ...pairs[k]];
-                const play = createPlay(triplePairCards, mainRank, mainSuit);
+                const play = createPlay(triplePairCards);
                 if (play && play.type === PlayType.TRIPLE_PAIR && !checked.has(play.cards.map(c => c.id).join(','))) {
                   possiblePlays.push(play);
                   checked.add(play.cards.map(c => c.id).join(','));
@@ -501,7 +488,7 @@ export function findPossiblePlays(
       if (cards.length >= 4) {
         // 取前4张或更多
         for (let count = 4; count <= cards.length; count++) {
-          const play = createPlay(cards.slice(0, count), mainRank, mainSuit);
+          const play = createPlay(cards.slice(0, count));
           if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
             possiblePlays.push(play);
             checked.add(play.cards.map(c => c.id).join(','));
@@ -510,11 +497,10 @@ export function findPossiblePlays(
       }
     });
 
-    // 顺子（恰好5张连续单牌，不可超过五张）
-    // 获取所有不同的rank（排除主牌和王）
+    // 顺子（恰好5张连续单牌）
     const rankMap = new Map<Rank, Card[]>();
     sortedHand.forEach(card => {
-      if (card.suit !== Suit.JOKER && (!mainRank || card.rank !== mainRank)) {
+      if (card.suit !== Suit.JOKER) {
         if (!rankMap.has(card.rank)) {
           rankMap.set(card.rank, []);
         }
@@ -543,11 +529,10 @@ export function findPossiblePlays(
       }
 
       if (isConsecutive) {
-        // 生成所有可能的顺子组合（每个rank选择一张牌）
+        // 生成所有可能的顺子组合
         const generateStraights = (rankIndex: number, currentCards: Card[]): void => {
           if (rankIndex === 5) {
-            // 已经选择了5张牌，创建Play
-            const play = createPlay(currentCards, mainRank, mainSuit);
+            const play = createPlay(currentCards);
             if (play && (play.type === PlayType.STRAIGHT || play.type === PlayType.STRAIGHT_FLUSH)) {
               const key = play.cards.map(c => c.id).sort().join(',');
               if (!checked.has(key)) {
@@ -572,7 +557,7 @@ export function findPossiblePlays(
     // 四王
     const jokers = sortedHand.filter(c => c.suit === Suit.JOKER);
     if (jokers.length === 4) {
-      const play = createPlay(jokers, mainRank, mainSuit);
+      const play = createPlay(jokers);
       if (play && !checked.has(play.cards.map(c => c.id).join(','))) {
         possiblePlays.push(play);
         checked.add(play.cards.map(c => c.id).join(','));
@@ -581,10 +566,9 @@ export function findPossiblePlays(
   } else {
     // 有上家出牌，只能出能压过的牌
     const checked = new Set<string>();
-    // 重新调用findPossiblePlays，但这次传入null以获取所有可能
-    const allPossible = findPossiblePlays(hand, null, mainRank, mainSuit);
+    const allPossible = findPossiblePlays(hand, null);
     allPossible.forEach(play => {
-      if (canBeat(play, lastPlay, mainRank, mainSuit)) {
+      if (canBeat(play, lastPlay)) {
         const playKey = play.cards.map(c => c.id).sort().join(',');
         if (!checked.has(playKey)) {
           possiblePlays.push(play);

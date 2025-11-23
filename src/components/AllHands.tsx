@@ -5,13 +5,11 @@ import { sortCards } from '../utils/helpers';
 
 interface AllHandsProps {
     players: Player[];
-    mainRank?: any;
-    mainSuit?: any;
     isOpen: boolean;
     onClose: () => void;
 }
 
-export default function AllHands({ players, mainRank, mainSuit, isOpen, onClose }: AllHandsProps) {
+export default function AllHands({ players, isOpen, onClose }: AllHandsProps) {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -29,7 +27,7 @@ export default function AllHands({ players, mainRank, mainSuit, isOpen, onClose 
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                        style={{ 
+                        style={{
                             position: 'fixed',
                             top: '50%',
                             left: '50%',
@@ -68,7 +66,7 @@ export default function AllHands({ players, mainRank, mainSuit, isOpen, onClose 
                                 {/* Players' hands */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {players.map((player, index) => {
-                                        const sortedHand = sortCards([...player.hand], mainRank, mainSuit);
+                                        const sortedHand = sortCards([...player.hand]);
 
                                         return (
                                             <motion.div

@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
-import { RANK_NAMES } from '../utils/constants';
 import { GameMode } from '../game/types';
-import { SuitIcon } from './card/CardAssets';
 
 interface GameInfoProps {
   onOpenPlayHistory?: () => void;
@@ -38,35 +36,6 @@ export default function GameInfo({ onOpenPlayHistory, onOpenAllHands }: GameInfo
               <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Level</span>
               <span className="text-xs md:text-sm font-bold text-gold-metallic tracking-wide font-display">当前级牌</span>
             </div>
-          </div>
-
-          {/* 分隔线 */}
-          <div className="h-6 md:h-8 w-px bg-white/10" />
-
-          {/* 主牌 */}
-          <div className="flex items-center gap-2 md:gap-3">
-            {gameState.mainSuit && gameState.mainRank ? (
-              <>
-                <div className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-inner flex items-center justify-center`}>
-                  <div
-                    className={`w-6 h-6 md:w-8 md:h-8 ${gameState.mainSuit === 'heart' || gameState.mainSuit === 'diamond'
-                        ? 'text-red-500'
-                        : 'text-white'
-                      }`}
-                  >
-                    <SuitIcon suit={gameState.mainSuit as any} />
-                  </div>
-                </div>
-                <div className="flex flex-col justify-center">
-                  <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Trump</span>
-                  <span className="text-xs md:text-sm font-bold text-white font-display">
-                    {RANK_NAMES[gameState.mainRank]}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="text-gray-400 text-[10px] md:text-xs font-serif italic px-2">无主牌</div>
-            )}
           </div>
         </motion.div>
 

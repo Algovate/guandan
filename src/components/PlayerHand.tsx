@@ -53,21 +53,12 @@ export default function PlayerHand() {
   const player = gameState.players.find(p => !p.isAI);
   if (!player) return null;
 
-  const sortedHand = sortCards(
-    player.hand,
-    gameState.mainRank || undefined,
-    gameState.mainSuit || undefined
-  );
+  const sortedHand = sortCards(player.hand);
 
   const isCurrentPlayer = gameState.currentPlayerIndex === gameState.players.indexOf(player);
 
   const possiblePlays = isCurrentPlayer
-    ? findPossiblePlays(
-      sortedHand,
-      gameState.lastPlay,
-      gameState.mainRank || undefined,
-      gameState.mainSuit || undefined
-    )
+    ? findPossiblePlays(sortedHand, gameState.lastPlay)
     : [];
 
   const selectedPlay = possiblePlays.find(play => {

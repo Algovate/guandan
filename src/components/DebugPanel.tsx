@@ -74,18 +74,6 @@ export default function DebugPanel() {
                                     <div className="text-white font-mono">
                                         {PHASE_NAMES[gameState.phase] || gameState.phase}
                                     </div>
-                                    <div className="text-gray-400">主牌:</div>
-                                    <div className="text-gold-metallic font-mono font-bold">
-                                        {gameState.mainRank || '-'} {
-                                            gameState.mainSuit ? {
-                                                'spade': '♠',
-                                                'heart': '♥',
-                                                'club': '♣',
-                                                'diamond': '♦',
-                                                'joker': '🃏'
-                                            }[gameState.mainSuit] : ''
-                                        }
-                                    </div>
                                     <div className="text-gray-400">级数:</div>
                                     <div className="text-white font-mono">{gameState.level}</div>
                                     <div className="text-gray-400">比分:</div>

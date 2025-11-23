@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import { GamePhase, GameMode } from '../game/types';
 import Card from './Card';
-import { SuitIcon } from './card/CardAssets';
-import { RANK_NAMES } from '../utils/constants';
 import { findPossiblePlays } from '../game/CardTypes';
 import { sortCards } from '../utils/helpers';
 import PlayHistory from './PlayHistory';
@@ -33,20 +31,11 @@ export default function MobileArenaLayout() {
   const player = gameState.players.find(p => !p.isAI);
   if (!player) return null;
 
-  const sortedHand = sortCards(
-    player.hand,
-    gameState.mainRank || undefined,
-    gameState.mainSuit || undefined
-  );
+  const sortedHand = sortCards(player.hand);
 
   const isCurrentPlayer = gameState.currentPlayerIndex === gameState.players.indexOf(player);
   const possiblePlays = isCurrentPlayer
-    ? findPossiblePlays(
-      sortedHand,
-      gameState.lastPlay,
-      gameState.mainRank || undefined,
-      gameState.mainSuit || undefined
-    )
+    ? findPossiblePlays(sortedHand, gameState.lastPlay)
     : [];
 
   const selectedPlay = possiblePlays.find(play => {
@@ -93,19 +82,11 @@ export default function MobileArenaLayout() {
       {/* 顶部状态栏 - 紧凑设计 */}
       <div className="flex-shrink-0 bg-black/20 backdrop-blur-md border-b border-white/10 px-3 py-2 z-50 shadow-md">
         <div className="flex items-center justify-between">
-          {/* 左侧：等级和主牌 */}
+          {/* 左侧：等级 */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-b from-[#d4af37] to-[#b8860b] rounded-lg border border-[#f3d267] flex items-center justify-center">
               <span className="text-sm font-bold text-white">{gameState.level}</span>
             </div>
-            {gameState.mainSuit && gameState.mainRank && (
-              <>
-                <div className="w-6 h-6 bg-white/10 rounded flex items-center justify-center">
-                  <SuitIcon suit={gameState.mainSuit as any} />
-                </div>
-                <span className="text-xs text-white font-bold">{RANK_NAMES[gameState.mainRank]}</span>
-              </>
-            )}
           </div>
 
           {/* 中间：比分 */}
@@ -157,7 +138,6 @@ export default function MobileArenaLayout() {
           </div>
         </div>
       </div>
-
       {/* 主游戏区域 */}
       <div className="flex-1 relative overflow-hidden">
         {/* AI玩家信息 - 紧凑列表式 */}
@@ -353,8 +333,6 @@ export default function MobileArenaLayout() {
           />
           <AllHands
             players={gameState.players}
-            mainRank={gameState.mainRank || undefined}
-            mainSuit={gameState.mainSuit || undefined}
             isOpen={showAllHands}
             onClose={() => setShowAllHands(false)}
           />

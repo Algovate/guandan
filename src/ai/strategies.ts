@@ -10,8 +10,6 @@ export interface AIStrategy {
     hand: Card[],
     lastPlay: Play | null,
     isTeammateLastPlay: boolean,
-    mainRank?: string,
-    mainSuit?: string
   ): { play: Play | null; pass: boolean };
 }
 
@@ -23,15 +21,13 @@ export class EasyAIStrategy implements AIStrategy {
     hand: Card[],
     lastPlay: Play | null,
     isTeammateLastPlay: boolean,
-    mainRank?: string,
-    mainSuit?: string
   ): { play: Play | null; pass: boolean } {
     // 如果是队友出的牌，大概率不出
     if (isTeammateLastPlay && Math.random() > 0.3) {
       return { play: null, pass: true };
     }
     
-    const possiblePlays = findPossiblePlays(hand, lastPlay, mainRank as any, mainSuit as any);
+    const possiblePlays = findPossiblePlays(hand, lastPlay);
     
     if (possiblePlays.length === 0) {
       return { play: null, pass: true };
@@ -51,15 +47,13 @@ export class MediumAIStrategy implements AIStrategy {
     hand: Card[],
     lastPlay: Play | null,
     isTeammateLastPlay: boolean,
-    mainRank?: string,
-    mainSuit?: string
   ): { play: Play | null; pass: boolean } {
     // 如果是队友出的牌，大概率不出
     if (isTeammateLastPlay && Math.random() > 0.2) {
       return { play: null, pass: true };
     }
     
-    const possiblePlays = findPossiblePlays(hand, lastPlay, mainRank as any, mainSuit as any);
+    const possiblePlays = findPossiblePlays(hand, lastPlay);
     
     if (possiblePlays.length === 0) {
       return { play: null, pass: true };
@@ -67,7 +61,7 @@ export class MediumAIStrategy implements AIStrategy {
     
     // 策略：优先出小牌，保留大牌
     const sortedPlays = [...possiblePlays].sort((a, b) => {
-      const comparison = comparePlays(a, b, mainRank as any, mainSuit as any);
+      const comparison = comparePlays(a, b);
       return -comparison; // 反向排序，小的在前
     });
     
@@ -89,8 +83,6 @@ export class HardAIStrategy implements AIStrategy {
     hand: Card[],
     lastPlay: Play | null,
     isTeammateLastPlay: boolean,
-    mainRank?: string,
-    mainSuit?: string
   ): { play: Play | null; pass: boolean } {
     // 如果是队友出的牌，根据手牌情况决定
     if (isTeammateLastPlay) {
@@ -104,7 +96,7 @@ export class HardAIStrategy implements AIStrategy {
       }
     }
     
-    const possiblePlays = findPossiblePlays(hand, lastPlay, mainRank as any, mainSuit as any);
+    const possiblePlays = findPossiblePlays(hand, lastPlay);
     
     if (possiblePlays.length === 0) {
       return { play: null, pass: true };
@@ -113,7 +105,7 @@ export class HardAIStrategy implements AIStrategy {
     // 评估每个出牌的价值
     const evaluatedPlays = possiblePlays.map(play => ({
       play,
-      score: this.evaluatePlay(play, hand, lastPlay, mainRank, mainSuit),
+      score: this.evaluatePlay(play, hand, lastPlay),
     }));
     
     // 根据情况选择策略
@@ -153,8 +145,6 @@ export class HardAIStrategy implements AIStrategy {
     play: Play,
     _hand: Card[],
     lastPlay: Play | null,
-    mainRank?: string,
-    mainSuit?: string
   ): number {
     let score = 0;
     
@@ -175,7 +165,7 @@ export class HardAIStrategy implements AIStrategy {
     }
     
     // 如果能压过，稍微降低分数（优先出）
-    if (lastPlay && comparePlays(play, lastPlay, mainRank as any, mainSuit as any) > 0) {
+    if (lastPlay && comparePlays(play, lastPlay) > 0) {
       score -= 5;
     }
     

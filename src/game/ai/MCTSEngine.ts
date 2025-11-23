@@ -75,9 +75,7 @@ export class MCTSEngine {
         const currentPlayer = gameState.players[gameState.currentPlayerIndex];
         const possiblePlays = findPossiblePlays(
             currentPlayer.hand,
-            gameState.lastPlay,
-            gameState.mainRank || undefined,
-            gameState.mainSuit || undefined
+            gameState.lastPlay
         );
 
         return {
@@ -225,9 +223,7 @@ export class MCTSEngine {
         const currentPlayer = gameState.players[gameState.currentPlayerIndex];
         const possiblePlays = findPossiblePlays(
             currentPlayer.hand,
-            gameState.lastPlay,
-            gameState.mainRank || undefined,
-            gameState.mainSuit || undefined
+            gameState.lastPlay
         );
 
         if (possiblePlays.length === 0) {
@@ -236,7 +232,7 @@ export class MCTSEngine {
 
         // 简单启发式：如果是跟牌，出最小的能管上的
         if (gameState.lastPlay && gameState.lastPlayPlayerIndex !== gameState.currentPlayerIndex) {
-            possiblePlays.sort((a, b) => comparePlays(a, b, gameState.mainRank || undefined, gameState.mainSuit || undefined));
+            possiblePlays.sort((a, b) => comparePlays(a, b));
             return possiblePlays[0];
         }
 
@@ -277,10 +273,10 @@ export class MCTSEngine {
         // 我们只评估当前玩家和队友的，因为对手手牌在MCTS中是未知的(或假设的)，
         // 但在模拟结束状态，我们可以看到所有人的剩余手牌。
 
-        const myScore = HandEvaluator.evaluate(player.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
-        const teammateScore = HandEvaluator.evaluate(teammate.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
-        const opp1Score = HandEvaluator.evaluate(opponent1.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
-        const opp2Score = HandEvaluator.evaluate(opponent2.hand, gameState.mainRank || undefined, gameState.mainSuit || undefined).totalScore;
+        const myScore = HandEvaluator.evaluate(player.hand).totalScore;
+        const teammateScore = HandEvaluator.evaluate(teammate.hand).totalScore;
+        const opp1Score = HandEvaluator.evaluate(opponent1.hand).totalScore;
+        const opp2Score = HandEvaluator.evaluate(opponent2.hand).totalScore;
 
         const myTeamTotal = myScore + teammateScore;
         const oppTeamTotal = opp1Score + opp2Score;

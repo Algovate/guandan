@@ -105,7 +105,7 @@ export default function GameTable() {
       </div>
 
       {/* 游戏信息 */}
-      <GameInfo 
+      <GameInfo
         onOpenPlayHistory={() => setShowPlayHistory(true)}
         onOpenAllHands={() => setShowAllHands(true)}
       />
@@ -150,8 +150,6 @@ export default function GameTable() {
           />
           <AllHands
             players={gameState.players}
-            mainRank={gameState.mainRank || undefined}
-            mainSuit={gameState.mainSuit || undefined}
             isOpen={showAllHands}
             onClose={() => setShowAllHands(false)}
           />

@@ -71,11 +71,10 @@ export class AIDecisionEngine {
     // 获取情绪状态
     const emotion = this.getEmotionState(player, gameState);
 
-    // 使用Strategy Engine做决策
+    // Use Strategy Engine to make decision
     const cardsToPlay = StrategyEngine.decideMove(
       player,
-      gameState,
-      this.personality
+      gameState
     );
 
     let play: Play | null = null;
@@ -84,7 +83,7 @@ export class AIDecisionEngine {
     if (!cardsToPlay || cardsToPlay.length === 0) {
       pass = true;
     } else {
-      play = createPlay(cardsToPlay, gameState.mainRank || undefined, gameState.mainSuit || undefined);
+      play = createPlay(cardsToPlay);
       if (!play) {
         pass = true;
       }

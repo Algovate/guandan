@@ -18,49 +18,49 @@ export class HandStructureAnalyzer {
     /**
      * Decomposes a hand into a list of plays
      */
-    static analyze(hand: Card[], mainRank?: Rank, mainSuit?: Suit): HandStructure {
-        const sortedHand = sortCards([...hand], mainRank, mainSuit);
+    static analyze(hand: Card[]): HandStructure {
+        const sortedHand = sortCards([...hand]);
         const plays: Play[] = [];
         let currentHand = [...sortedHand];
 
         // 1. Extract Bombs (Highest Priority)
-        const bombs = this.extractBombs(currentHand, mainRank, mainSuit);
+        const bombs = this.extractBombs(currentHand);
         plays.push(...bombs.plays);
         currentHand = bombs.remaining;
 
         // 2. Extract Straight Flushes
-        const straightFlushes = this.extractStraightFlushes(currentHand, mainRank, mainSuit);
+        const straightFlushes = this.extractStraightFlushes(currentHand);
         plays.push(...straightFlushes.plays);
         currentHand = straightFlushes.remaining;
 
         // 3. Extract Plates (Steel Plates)
-        const plates = this.extractPlates(currentHand, mainRank, mainSuit);
+        const plates = this.extractPlates(currentHand);
         plays.push(...plates.plays);
         currentHand = plates.remaining;
 
         // 4. Extract Triple Pairs
-        const triplePairs = this.extractTriplePairs(currentHand, mainRank, mainSuit);
+        const triplePairs = this.extractTriplePairs(currentHand);
         plays.push(...triplePairs.plays);
         currentHand = triplePairs.remaining;
 
         // 5. Extract Straights
-        const straights = this.extractStraights(currentHand, mainRank, mainSuit);
+        const straights = this.extractStraights(currentHand);
         plays.push(...straights.plays);
         currentHand = straights.remaining;
 
         // 6. Extract Triples (with or without pairs)
-        const triples = this.extractTriples(currentHand, mainRank, mainSuit);
+        const triples = this.extractTriples(currentHand);
         plays.push(...triples.plays);
         currentHand = triples.remaining;
 
         // 7. Extract Pairs
-        const pairs = this.extractPairs(currentHand, mainRank, mainSuit);
+        const pairs = this.extractPairs(currentHand);
         plays.push(...pairs.plays);
         currentHand = pairs.remaining;
 
         // 8. Remaining are Singles
         currentHand.forEach(card => {
-            const play = createPlay([card], mainRank, mainSuit);
+            const play = createPlay([card]);
             if (play) plays.push(play);
         });
 
@@ -72,14 +72,14 @@ export class HandStructureAnalyzer {
         };
     }
 
-    private static extractBombs(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractBombs(hand: Card[]): { plays: Play[], remaining: Card[] } {
         const plays: Play[] = [];
         let remaining = [...hand];
 
         // Four Kings
         const jokers = remaining.filter(c => c.suit === Suit.JOKER);
         if (jokers.length === 4) {
-            const play = createPlay(jokers, mainRank, mainSuit);
+            const play = createPlay(jokers);
             if (play) {
                 plays.push(play);
                 remaining = remaining.filter(c => c.suit !== Suit.JOKER);
@@ -90,7 +90,7 @@ export class HandStructureAnalyzer {
         const rankGroups = this.groupCardsByRank(remaining);
         rankGroups.forEach((cards, rank) => {
             if (cards.length >= 4) {
-                const play = createPlay(cards, mainRank, mainSuit);
+                const play = createPlay(cards);
                 if (play) {
                     plays.push(play);
                     remaining = remaining.filter(c => c.rank !== rank);
@@ -107,7 +107,7 @@ export class HandStructureAnalyzer {
         return { plays: [], remaining: hand }; // Placeholder for now
     }
 
-    private static extractPlates(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractPlates(hand: Card[]): { plays: Play[], remaining: Card[] } {
         const plays: Play[] = [];
         let remaining = [...hand];
 
@@ -126,10 +126,10 @@ export class HandStructureAnalyzer {
             const r2 = tripleRanks[i + 1];
 
             // Check if consecutive and not main rank
-            if (RANK_ORDER.indexOf(r2) === RANK_ORDER.indexOf(r1) + 1 && r1 !== mainRank && r2 !== mainRank) {
+            if (RANK_ORDER.indexOf(r2) === RANK_ORDER.indexOf(r1) + 1) {
                 const cards1 = rankGroups.get(r1)!;
                 const cards2 = rankGroups.get(r2)!;
-                const play = createPlay([...cards1, ...cards2], mainRank, mainSuit);
+                const play = createPlay([...cards1, ...cards2]);
                 if (play) {
                     plays.push(play);
                     remaining = remaining.filter(c => c.rank !== r1 && c.rank !== r2);
@@ -146,14 +146,14 @@ export class HandStructureAnalyzer {
         return { plays: [], remaining: hand }; // Placeholder
     }
 
-    private static extractStraights(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractStraights(hand: Card[]): { plays: Play[], remaining: Card[] } {
         const plays: Play[] = [];
         let remaining = [...hand];
 
         // Filter out Jokers and Main Rank (usually not used in straights unless desperate)
         // For simplicity, we only look for natural straights
         const potentialCards = remaining.filter(c =>
-            c.suit !== Suit.JOKER && c.rank !== mainRank
+            c.suit !== Suit.JOKER && false
         );
 
         const rankGroups = this.groupCardsByRank(potentialCards);
@@ -180,7 +180,7 @@ export class HandStructureAnalyzer {
                     straightCards.push(rankGroups.get(rank)![0]); // Take one of each
                 });
 
-                const play = createPlay(straightCards, mainRank, mainSuit);
+                const play = createPlay(straightCards);
                 if (play) {
                     plays.push(play);
                     // Remove used cards
@@ -194,7 +194,7 @@ export class HandStructureAnalyzer {
                     // To keep it simple, we just return one straight at a time or restart. 
                     // Let's just break and return for now, or recurse?
                     // Recursion is safer.
-                    const result = this.extractStraights(remaining, mainRank, mainSuit);
+                    const result = this.extractStraights(remaining, );
                     plays.push(...result.plays);
                     remaining = result.remaining;
                     return { plays, remaining };
@@ -204,7 +204,7 @@ export class HandStructureAnalyzer {
 
         return { plays, remaining };
     }
-    private static extractTriples(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractTriples(hand: Card[]): { plays: Play[], remaining: Card[] } {
         const plays: Play[] = [];
         let remaining = [...hand];
 
@@ -230,14 +230,14 @@ export class HandStructureAnalyzer {
         triples.forEach(tripleCards => {
             if (pairs.length > 0) {
                 const pairCards = pairs.pop()!;
-                const play = createPlay([...tripleCards, ...pairCards], mainRank, mainSuit);
+                const play = createPlay([...tripleCards, ...pairCards]);
                 if (play) {
                     plays.push(play);
                     remaining = remaining.filter(c => !tripleCards.includes(c) && !pairCards.includes(c));
                 }
             } else {
                 // Just triple
-                const play = createPlay(tripleCards, mainRank, mainSuit);
+                const play = createPlay(tripleCards);
                 if (play) {
                     plays.push(play);
                     remaining = remaining.filter(c => !tripleCards.includes(c));
@@ -248,14 +248,14 @@ export class HandStructureAnalyzer {
         return { plays, remaining };
     }
 
-    private static extractPairs(hand: Card[], mainRank?: Rank, mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractPairs(hand: Card[]): { plays: Play[], remaining: Card[] } {
         const plays: Play[] = [];
         let remaining = [...hand];
 
         const rankGroups = this.groupCardsByRank(remaining);
         rankGroups.forEach((cards, rank) => {
             if (cards.length === 2) {
-                const play = createPlay(cards, mainRank, mainSuit);
+                const play = createPlay(cards);
                 if (play) {
                     plays.push(play);
                     remaining = remaining.filter(c => c.rank !== rank);

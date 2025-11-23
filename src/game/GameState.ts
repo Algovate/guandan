@@ -6,8 +6,6 @@ import type {
 import {
   GamePhase,
   PlayerPosition,
-  Rank,
-  Suit
 } from './types';
 import { Deck } from './Deck';
 import { PlayValidator } from './PlayValidator';
@@ -41,8 +39,6 @@ export class GameStateManager {
       lastPlay: null,
       lastPlayPlayerIndex: -1,
       level: '2',
-      mainSuit: null,
-      mainRank: null,
       deck: [],
       teamScores: [0, 0],
       teamNames: [team0Theme.teamName, team1Theme.teamName],
@@ -107,7 +103,7 @@ export class GameStateManager {
   startNewGame(): void {
     this.state = this.createInitialState();
     this.dealCards();
-    this.state.phase = GamePhase.CALLING_MAIN;
+    this.state.phase = GamePhase.PLAYING;
   }
 
   /**
@@ -125,53 +121,7 @@ export class GameStateManager {
     this.state.deck = deck.allCards;
   }
 
-  /**
-   * 叫主（简化：自动选择第一个出现的当前级牌作为主牌）
-   * 规则：第一轮，中间随机翻一张牌，抓到者先出牌（这里简化处理）
-   */
-  callMain(): void {
-    // 根据当前等级确定主牌等级
-    const levelToRank: Record<string, Rank> = {
-      '2': Rank.TWO,
-      '3': Rank.THREE,
-      '4': Rank.FOUR,
-      '5': Rank.FIVE,
-      '6': Rank.SIX,
-      '7': Rank.SEVEN,
-      '8': Rank.EIGHT,
-      '9': Rank.NINE,
-      '10': Rank.TEN,
-      'J': Rank.JACK,
-      'Q': Rank.QUEEN,
-      'K': Rank.KING,
-      'A': Rank.ACE,
-    };
 
-    const mainRankForLevel = levelToRank[this.state.level];
-    if (!mainRankForLevel) {
-      // 默认使用A
-      this.state.mainRank = Rank.ACE;
-      this.state.mainSuit = Suit.SPADE;
-      this.state.phase = GamePhase.PLAYING;
-      return;
-    }
-
-    // 简化实现：找到第一个当前级牌作为主牌
-    const player = this.state.players[this.state.currentPlayerIndex];
-    const levelCard = player.hand.find(card => card.rank === mainRankForLevel);
-
-    if (levelCard) {
-      this.state.mainRank = mainRankForLevel;
-      this.state.mainSuit = levelCard.suit;
-    } else {
-      // 如果没有当前级牌，随机选择一个花色
-      const suits: Suit[] = [Suit.SPADE, Suit.HEART, Suit.DIAMOND, Suit.CLUB];
-      this.state.mainRank = mainRankForLevel;
-      this.state.mainSuit = suits[Math.floor(Math.random() * suits.length)] || Suit.SPADE;
-    }
-
-    this.state.phase = GamePhase.PLAYING;
-  }
 
   /**
    * 玩家出牌
@@ -183,9 +133,7 @@ export class GameStateManager {
     const validation = PlayValidator.validatePlay(
       player,
       cards,
-      this.state.lastPlay,
-      this.state.mainRank || undefined,
-      this.state.mainSuit || undefined
+      this.state.lastPlay
     );
 
     if (!validation.valid || !validation.play) {
@@ -344,7 +292,7 @@ export class GameStateManager {
 
     // 重新发牌
     this.dealCards();
-    this.state.phase = GamePhase.CALLING_MAIN;
+    this.state.phase = GamePhase.PLAYING;
     this.state.currentPlayerIndex = 0;
     this.state.lastPlay = null;
     this.state.lastPlayPlayerIndex = -1;
@@ -352,8 +300,6 @@ export class GameStateManager {
     this.state.currentPlay = null;
     this.state.currentTrick = []; // 重置当前轮出牌记录
     this.state.roundWinner = null;
-    this.state.mainSuit = null;
-    this.state.mainRank = null;
   }
 
   /**

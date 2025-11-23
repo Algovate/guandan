@@ -1,5 +1,5 @@
 import type { Card } from '../game/types';
-import { Rank, Suit } from '../game/types';
+import { Rank } from '../game/types';
 import { RANK_ORDER, SUIT_ORDER } from './constants';
 
 /**
@@ -13,15 +13,11 @@ export function generateId(): string {
  * 比较两张牌的大小
  * @param card1 
  * @param card2 
- * @param mainRank 当前主牌等级
- * @param mainSuit 当前主牌花色
  * @returns 正数表示card1大，负数表示card2大，0表示相等
  */
 export function compareCards(
   card1: Card,
-  card2: Card,
-  mainRank?: Rank,
-  mainSuit?: Suit
+  card2: Card
 ): number {
   // 四王最大
   const card1IsBigJoker = card1.rank === Rank.JOKER_BIG;
@@ -34,33 +30,7 @@ export function compareCards(
   if (card1IsSmallJoker && !card2IsBigJoker) return 1;
   if (card2IsSmallJoker && !card1IsBigJoker) return -1;
 
-  // 级牌（Level Card）处理
-  // 掼蛋规则：红桃级牌 > 其他级牌 > 主花色牌 > 普通牌
-  const isCard1Level = mainRank && card1.rank === mainRank;
-  const isCard2Level = mainRank && card2.rank === mainRank;
-
-  // 如果都是级牌
-  if (isCard1Level && isCard2Level) {
-    // 红桃级牌最大（逢人配）
-    if (card1.suit === Suit.HEART && card2.suit !== Suit.HEART) return 1;
-    if (card2.suit === Suit.HEART && card1.suit !== Suit.HEART) return -1;
-    // 其他级牌大小相同（或者按花色排序，通常不区分大小，但为了排序稳定可以按花色）
-    return SUIT_ORDER.indexOf(card1.suit) - SUIT_ORDER.indexOf(card2.suit);
-  }
-
-  // 一个是级牌，一个不是
-  if (isCard1Level && !isCard2Level) return 1;
-  if (!isCard1Level && isCard2Level) return -1;
-
-  // 主花色处理
-  // 如果都不是级牌，检查是否为主花色
-  const isCard1MainSuit = mainSuit && card1.suit === mainSuit;
-  const isCard2MainSuit = mainSuit && card2.suit === mainSuit;
-
-  if (isCard1MainSuit && !isCard2MainSuit) return 1;
-  if (!isCard1MainSuit && isCard2MainSuit) return -1;
-
-  // 都是主花色或都是副牌，比较点数
+  // 比较点数
   const rank1Index = RANK_ORDER.indexOf(card1.rank);
   const rank2Index = RANK_ORDER.indexOf(card2.rank);
   if (rank1Index !== rank2Index) {
@@ -74,14 +44,12 @@ export function compareCards(
 }
 
 /**
- * 比较两张牌的大小（仅比较数值，忽略花色，除非是级牌）
+ * 比較两张牌的大小（仅比较数值，忽略花色）
  * 用于判断出牌是否能压过
  */
 export function compareCardValues(
   card1: Card,
-  card2: Card,
-  mainRank?: Rank,
-  mainSuit?: Suit
+  card2: Card
 ): number {
   // 四王最大
   const card1IsBigJoker = card1.rank === Rank.JOKER_BIG;
@@ -94,31 +62,7 @@ export function compareCardValues(
   if (card1IsSmallJoker && !card2IsBigJoker) return 1;
   if (card2IsSmallJoker && !card1IsBigJoker) return -1;
 
-  // 级牌（Level Card）处理
-  const isCard1Level = mainRank && card1.rank === mainRank;
-  const isCard2Level = mainRank && card2.rank === mainRank;
-
-  // 如果都是级牌
-  if (isCard1Level && isCard2Level) {
-    // 红桃级牌最大（逢人配）
-    if (card1.suit === Suit.HEART && card2.suit !== Suit.HEART) return 1;
-    if (card2.suit === Suit.HEART && card1.suit !== Suit.HEART) return -1;
-    // 其他级牌大小相同
-    return 0;
-  }
-
-  // 一个是级牌，一个不是
-  if (isCard1Level && !isCard2Level) return 1;
-  if (!isCard1Level && isCard2Level) return -1;
-
-  // 主花色处理
-  const isCard1MainSuit = mainSuit && card1.suit === mainSuit;
-  const isCard2MainSuit = mainSuit && card2.suit === mainSuit;
-
-  if (isCard1MainSuit && !isCard2MainSuit) return 1;
-  if (!isCard1MainSuit && isCard2MainSuit) return -1;
-
-  // 都是主花色或都是副牌，比较点数
+  // 比较点数
   const rank1Index = RANK_ORDER.indexOf(card1.rank);
   const rank2Index = RANK_ORDER.indexOf(card2.rank);
 
@@ -128,8 +72,8 @@ export function compareCardValues(
 /**
  * 对牌进行排序
  */
-export function sortCards(cards: Card[], mainRank?: Rank, mainSuit?: Suit): Card[] {
-  return [...cards].sort((a, b) => compareCards(a, b, mainRank, mainSuit));
+export function sortCards(cards: Card[]): Card[] {
+  return [...cards].sort((a, b) => compareCards(a, b));
 }
 
 /**
