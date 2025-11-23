@@ -5,6 +5,8 @@ import type { AIPersonality } from '../game/ai/AIPersonality';
 import { getPersonality, PersonalityType, getRandomPersonality, calculateThinkingTime } from '../game/ai/AIPersonality';
 import type { AIDecision } from '../game/ai/DecisionExplainer';
 import { DecisionExplainer } from '../game/ai/DecisionExplainer';
+import { ProbabilityAnalyzer } from '../game/ai/ProbabilityAnalyzer';
+import { CardTracker } from '../game/ai/CardTracker';
 
 /**
  * AI情绪状态
@@ -37,14 +39,26 @@ export interface AIDecisionResult {
 
 /**
  * AI决策引擎 - 整合性格和解释系统
+ * 集成概率分析和记牌功能，做出更智能的决策
  */
 export class AIDecisionEngine {
   private personality: AIPersonality;
   private explainer: DecisionExplainer;
+  private probabilityAnalyzer: ProbabilityAnalyzer | null = null;
+  private cardTracker: CardTracker | null = null;
 
   constructor(personalityType?: PersonalityType) {
     this.personality = personalityType ? getPersonality(personalityType) : getRandomPersonality();
     this.explainer = new DecisionExplainer();
+  }
+
+  /**
+   * 设置概率分析器和记牌器
+   * 这些分析器应该在游戏开始时创建并共享
+   */
+  setAnalyzers(probabilityAnalyzer: ProbabilityAnalyzer, cardTracker: CardTracker): void {
+    this.probabilityAnalyzer = probabilityAnalyzer;
+    this.cardTracker = cardTracker;
   }
 
   setPersonality(personalityType: PersonalityType): void {
@@ -57,6 +71,7 @@ export class AIDecisionEngine {
 
   /**
    * 做出决策并生成解释
+   * 使用概率分析和记牌功能进行智能决策
    */
   makeDecisionWithExplanation(
     player: Player,
@@ -71,10 +86,13 @@ export class AIDecisionEngine {
     // 获取情绪状态
     const emotion = this.getEmotionState(player, gameState);
 
-    // Use Strategy Engine to make decision
+    // 使用改进的 Strategy Engine 进行决策
+    // 如果可用，传递概率分析器和记牌器
     const cardsToPlay = StrategyEngine.decideMove(
       player,
-      gameState
+      gameState,
+      this.probabilityAnalyzer || undefined,
+      this.cardTracker || undefined
     );
 
     let play: Play | null = null;
@@ -86,6 +104,14 @@ export class AIDecisionEngine {
       play = createPlay(cardsToPlay);
       if (!play) {
         pass = true;
+      }
+    }
+
+    // 如果使用了分析器，更新记牌器
+    if (play && this.cardTracker) {
+      const playerIndex = gameState.players.findIndex(p => p.id === player.id);
+      if (playerIndex >= 0) {
+        this.cardTracker.trackPlayedCards(play.cards, playerIndex);
       }
     }
 
@@ -190,6 +216,7 @@ export class AIDecisionEngine {
 
   /**
    * 判断对手是否有威胁
+   * 使用记牌器获取更准确的手牌数
    */
   private isOpponentThreat(gameState: GameState): boolean {
     const opponentIndices = [
@@ -197,6 +224,15 @@ export class AIDecisionEngine {
       (gameState.currentPlayerIndex + 3) % 4
     ];
 
+    // 如果记牌器可用，使用更准确的数据
+    if (this.cardTracker) {
+      return opponentIndices.some(idx => {
+        const cardCount = this.cardTracker!.getPlayerCardCount(idx);
+        return cardCount <= 5;
+      });
+    }
+
+    // 回退到使用游戏状态中的手牌数
     return opponentIndices.some(idx => gameState.players[idx].hand.length <= 5);
   }
 }

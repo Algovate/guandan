@@ -221,19 +221,34 @@ export class GameStateManager {
 
   /**
    * 检查是否需要重置出牌轮次
+   * 规则：当回到最后一个出牌的玩家时，表示所有人都pass或出完一轮，应重置出牌状态
    */
   private checkRoundReset(): void {
     // 如果回到最后一个出牌的玩家，重置（所有人都pass或出完一轮）
-    // 简化：连续3个玩家pass就重置
-    // 实际应该跟踪pass次数
     if (this.state.currentPlayerIndex === this.state.lastPlayPlayerIndex && this.state.lastPlayPlayerIndex >= 0) {
-      this.state.lastPlay = null;
-      this.state.lastPlayPlayerIndex = -1;
       this.state.lastPlay = null;
       this.state.lastPlayPlayerIndex = -1;
       this.state.currentPlay = null;
       this.state.currentTrick = []; // 重置当前轮出牌记录
     }
+  }
+
+  /**
+   * 计算玩家排名（根据手牌数，0张为头游，最多为末游）
+   * @returns 玩家索引数组，按排名从高到低（头游到末游）
+   */
+  private calculatePlayerRankings(): number[] {
+    // 创建玩家索引和手牌数的映射
+    const playerCards = this.state.players.map((player, index) => ({
+      index,
+      cardCount: player.hand.length
+    }));
+
+    // 按手牌数排序（少的在前，多的在后）
+    playerCards.sort((a, b) => a.cardCount - b.cardCount);
+
+    // 返回排序后的玩家索引数组
+    return playerCards.map(p => p.index);
   }
 
   /**
@@ -248,54 +263,105 @@ export class GameStateManager {
     const winnerTeam = winner.team;
     this.state.teamScores[winnerTeam]++;
 
+    // 计算玩家排名（头游到末游）
+    const rankings = this.calculatePlayerRankings();
+    const headPlayerIndex = rankings[0]; // 头游
+    const lastPlayerIndex = rankings[rankings.length - 1]; // 末游
+
     // 检查是否游戏结束
     // 规则：从2打到A，2不必打，A必打
     // 如果打到A，必须一名为头游，另一名不能为末游，才可以最终算过A赢得本局
-    const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
-
-    // 如果在A级，需要检查是否满足过A条件
     if (this.state.level === 'A') {
-      // 简化实现：如果当前是A级且赢了，需要队友不是末游
-      // 这里需要更复杂的逻辑来判断头游和末游，暂时简化处理
-      // 如果A级赢了，游戏结束
-      this.state.phase = GamePhase.GAME_END;
-    } else if (currentLevelIndex >= LEVEL_ORDER.length - 1) {
-      // 已经到A级了
-      this.state.phase = GamePhase.GAME_END;
-    } else {
-      // 开始下一轮（升级）
-      this.startNextRound();
+      const headPlayer = this.state.players[headPlayerIndex];
+      const lastPlayer = this.state.players[lastPlayerIndex];
+      const headPlayerTeam = headPlayer.team;
+
+      // 检查是否满足过A条件：头游是我方，且末游不是我方
+      if (headPlayerTeam === winnerTeam && lastPlayer.team !== winnerTeam) {
+        // 过A成功，游戏结束
+        this.state.phase = GamePhase.GAME_END;
+        return;
+      } else {
+        // 未过A，继续下一轮（不升级，继续打A）
+        this.startNextRound(0); // 升0级，继续打A
+        return;
+      }
     }
+
+    // 计算升级数
+    const levelUp = this.calculateLevelUp(rankings, winnerTeam);
+    
+    // 开始下一轮（升级）
+    this.startNextRound(levelUp);
+  }
+
+  /**
+   * 计算升级数
+   * 规则：
+   * - 双下（对手两家都是末游）：升3级
+   * - 对手有一家是末游：升2级
+   * - 自己对门是末游：升1级
+   * @param rankings 玩家排名数组（头游到末游）
+   * @param winnerTeam 获胜队伍
+   * @returns 升级数
+   */
+  private calculateLevelUp(rankings: number[], winnerTeam: number): number {
+    // 获取末游玩家
+    const lastPlayerIndex = rankings[rankings.length - 1];
+    const lastPlayer = this.state.players[lastPlayerIndex];
+    const lastPlayerTeam = lastPlayer.team;
+
+    // 获取倒数第二的玩家（如果有）
+    const secondLastPlayerIndex = rankings[rankings.length - 2];
+    const secondLastPlayer = this.state.players[secondLastPlayerIndex];
+    const secondLastPlayerTeam = secondLastPlayer.team;
+
+    // 判断是否双下（对手两家都是末游）
+    if (lastPlayerTeam !== winnerTeam && secondLastPlayerTeam !== winnerTeam) {
+      return 3; // 双下升3级
+    }
+
+    // 判断对手是否有一家是末游
+    if (lastPlayerTeam !== winnerTeam) {
+      return 2; // 对手末游升2级
+    }
+
+    // 判断自己对门是否是末游
+    // 找到队友索引（对面是队友）
+    const winnerIndex = rankings[0]; // 头游是获胜者
+    const teammateIndex = (winnerIndex + 2) % PLAYER_COUNT;
+    if (lastPlayerIndex === teammateIndex) {
+      return 1; // 对门末游升1级
+    }
+
+    // 默认升1级（正常情况下不应该到这里）
+    return 1;
   }
 
   /**
    * 开始下一轮
-   * 规则：双下升3级，对手有一家是末游升2级，自己对门是末游升1级
-   * 简化实现：每次升1级（可以根据实际情况扩展）
+   * @param levelUp 升级数（0表示不升级，继续当前级别）
    */
-  private startNextRound(): void {
-    // 升级
+  private startNextRound(levelUp: number): void {
     const currentLevelIndex = LEVEL_ORDER.indexOf(this.state.level);
 
-    // 2不必打，可以直接跳过
+    // 如果当前是2级，2不必打，直接升到3级
     if (this.state.level === '2') {
-      // 如果当前是2级，直接升到3级（2不必打）
       if (currentLevelIndex < LEVEL_ORDER.length - 1) {
-        this.state.level = LEVEL_ORDER[currentLevelIndex + 1];
+        this.state.level = LEVEL_ORDER[currentLevelIndex + 1]; // 升到3级
       }
-    } else {
-      // 其他级别正常升级
-      if (currentLevelIndex < LEVEL_ORDER.length - 1) {
-        this.state.level = LEVEL_ORDER[currentLevelIndex + 1];
-      }
+    } else if (levelUp > 0) {
+      // 根据升级数升级
+      const newLevelIndex = Math.min(currentLevelIndex + levelUp, LEVEL_ORDER.length - 1);
+      this.state.level = LEVEL_ORDER[newLevelIndex];
     }
+    // 如果 levelUp === 0，保持当前级别（用于A级未过的情况）
 
     // 重新发牌
     this.dealCards();
     this.state.phase = GamePhase.PLAYING;
     this.state.currentPlayerIndex = 0;
     this.state.lastPlay = null;
-    this.state.lastPlayPlayerIndex = -1;
     this.state.lastPlayPlayerIndex = -1;
     this.state.currentPlay = null;
     this.state.currentTrick = []; // 重置当前轮出牌记录
