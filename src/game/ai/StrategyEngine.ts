@@ -132,50 +132,50 @@ export class StrategyEngine {
       return this.findFinishingPlay(possiblePlays, hand);
     }
 
-    // 根据性格调整策略
-    if (personality.type === PersonalityType.AGGRESSIVE) {
-      // 激进：优先出对子、三张等控制牌
-      return this.findAggressiveLeadPlay(possiblePlays);
-    } else if (personality.type === PersonalityType.CONSERVATIVE) {
-      // 保守：出最小的单张或对子
-      return this.findConservativeLeadPlay(possiblePlays, mainRank, mainSuit);
-    }
-
-    // 默认策略：优先顺子，其次小牌
-    // 使用结构分析器来决定最佳出牌
+    // Unified Strategy: Use HandStructureAnalyzer for ALL personalities
+    // This ensures we always prioritize clearing trash and playing patterns over wasting control cards.
     const structure = HandStructureAnalyzer.analyze(hand, mainRank || undefined, mainSuit || undefined);
+
     if (structure.plays.length > 0) {
-      // 优先出非炸弹的小牌
+      // 1. Filter out Bombs (Strictly last resort)
       const nonBombs = structure.plays.filter(p => p.type !== PlayType.BOMB && p.type !== PlayType.FOUR_KINGS);
 
       if (nonBombs.length > 0) {
-        // 分类：垃圾牌 (Trash) < 牌型 (Pattern) < 控制牌 (Control)
-        // 垃圾牌：小单张 (< 10), 小对子 (< 10)
-        // 牌型：顺子, 钢板, 三张, 三带二
-        // 控制牌：大单张 (>= 10), 大对子 (>= 10), 炸弹 (已过滤)
-
+        // 2. Categorize Plays
+        // Trash (0) < Pattern (1) < Control (2)
         const categorizedPlays = nonBombs.map(play => ({
           play,
           category: this.getPlayCategory(play, mainRank || undefined)
         }));
 
-        // 排序优先级：Category (Trash < Pattern < Control) -> Size
+        // 3. Sort based on Category, then Personality, then Value
         categorizedPlays.sort((a, b) => {
+          // Primary: Category
           if (a.category !== b.category) {
             return a.category - b.category;
           }
-          // 同类别按大小排序
+
+          // Secondary: Personality preference within same category
+          // Aggressive might prefer Pairs/Triples over Singles
+          if (personality.type === PersonalityType.AGGRESSIVE) {
+            const typePriorityA = this.getAggressiveTypePriority(a.play.type);
+            const typePriorityB = this.getAggressiveTypePriority(b.play.type);
+            if (typePriorityA !== typePriorityB) return typePriorityB - typePriorityA; // Higher priority first
+          }
+
+          // Tertiary: Value (Smallest first)
           return comparePlays(a.play, b.play, mainRank || undefined, mainSuit || undefined);
         });
 
         return categorizedPlays[0].play.cards;
       }
 
-      // 只有炸弹了，出最小的
+      // Only Bombs left
       structure.plays.sort((a, b) => comparePlays(a, b, mainRank || undefined, mainSuit || undefined));
       return structure.plays[0].cards;
     }
 
+    // Fallback (Should rarely reach here if Analyzer works)
     return this.findBalancedLeadPlay(possiblePlays, mainRank, mainSuit);
   }
 
@@ -336,39 +336,7 @@ export class StrategyEngine {
     return possiblePlays[0].cards;
   }
 
-  private static findAggressiveLeadPlay(possiblePlays: Play[]): Card[] {
-    // 优先对子、三张等
-    const triples = possiblePlays.filter(p =>
-      p.type === PlayType.TRIPLE || p.type === PlayType.TRIPLE_WITH_PAIR
-    );
-    if (triples.length > 0) return triples[0].cards;
 
-    const pairs = possiblePlays.filter(p => p.type === PlayType.PAIR);
-    if (pairs.length > 0) return pairs[0].cards;
-
-    return possiblePlays[0].cards;
-  }
-
-  private static findConservativeLeadPlay(
-    possiblePlays: Play[],
-    mainRank?: any,
-    mainSuit?: any
-  ): Card[] {
-    // 出最小的单张或对子
-    const singles = possiblePlays.filter(p => p.type === PlayType.SINGLE);
-    if (singles.length > 0) {
-      singles.sort((a, b) => comparePlays(a, b, mainRank, mainSuit));
-      return singles[0].cards;
-    }
-
-    const pairs = possiblePlays.filter(p => p.type === PlayType.PAIR);
-    if (pairs.length > 0) {
-      pairs.sort((a, b) => comparePlays(a, b, mainRank, mainSuit));
-      return pairs[0].cards;
-    }
-
-    return possiblePlays[0].cards;
-  }
 
   private static findBalancedLeadPlay(
     possiblePlays: Play[],
@@ -413,18 +381,17 @@ export class StrategyEngine {
     return false;
   }
 
-  private static getLeadTypePriority(type: PlayType): number {
+
+
+  private static getAggressiveTypePriority(type: PlayType): number {
+    // Aggressive prefers multi-card plays to clear hand faster or control
     switch (type) {
-      case PlayType.SINGLE: return 1;
-      case PlayType.PAIR: return 2;
-      case PlayType.TRIPLE_WITH_PAIR: return 3;
+      case PlayType.TRIPLE_WITH_PAIR: return 5;
       case PlayType.TRIPLE: return 4;
-      case PlayType.STRAIGHT: return 5;
-      case PlayType.STRAIGHT_FLUSH: return 6;
-      case PlayType.PLATE: return 7;
-      case PlayType.TRIPLE_PAIR: return 8;
-      case PlayType.BOMB: return 9;
-      case PlayType.FOUR_KINGS: return 10;
+      case PlayType.PLATE: return 3;
+      case PlayType.STRAIGHT: return 3;
+      case PlayType.PAIR: return 2;
+      case PlayType.SINGLE: return 1;
       default: return 0;
     }
   }
@@ -475,10 +442,5 @@ export class StrategyEngine {
   private static getRankIndex(rank: any): number {
     const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', 'SMALL_JOKER', 'BIG_JOKER'];
     return RANK_ORDER.indexOf(rank);
-  }
-
-  private static getRankBaseValue(_rank: any): number {
-    // Placeholder if needed, but getRankIndex is better
-    return 0;
   }
 }
