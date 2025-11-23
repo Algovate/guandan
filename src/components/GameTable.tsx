@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
 import AIPlayer from './AIPlayer';
@@ -7,9 +7,18 @@ import PlayArea from './PlayArea';
 import GameInfo from './GameInfo';
 import Toast from './Toast';
 import { PlayerPosition, GamePhase } from '../game/types';
+import MobileArenaLayout from './MobileArenaLayout';
 
 export default function GameTable() {
   const { gameState, initGame, startGame, toastMessage, clearSelection } = useGameStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     initGame();
@@ -61,6 +70,10 @@ export default function GameTable() {
 
   const players = gameState.players;
   const currentPlayerIndex = gameState.currentPlayerIndex;
+
+  if (isMobile) {
+    return <MobileArenaLayout />;
+  }
 
   return (
     <div
@@ -142,18 +155,18 @@ export default function GameTable() {
               {gameState.teamScores[0] > gameState.teamScores[1] ? '👑' : '🏆'}
             </motion.div>
 
-            <h2 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-gold-metallic">
+            <h2 className="text-4xl md:text-6xl font-display font-bold mb-6 text-gold-metallic tracking-wide text-shadow-lg">
               {gameState.teamScores[0] > gameState.teamScores[1] ? `${gameState.teamNames[0]}获胜` : `${gameState.teamNames[1]}获胜`}
             </h2>
 
             <div className="mb-10 mt-4 w-full space-y-4">
               <div className="flex justify-between items-center border-b border-white/10 pb-4 text-xl">
-                <span className="font-serif text-gray-300">{gameState.teamNames[0]}</span>
-                <span className="font-bold text-gold-metallic text-3xl">{gameState.teamScores[0]}</span>
+                <span className="font-display text-gray-300 font-bold tracking-wider">{gameState.teamNames[0]}</span>
+                <span className="font-bold text-gold-metallic text-3xl font-display">{gameState.teamScores[0]}</span>
               </div>
               <div className="flex justify-between items-center pt-2 text-xl">
-                <span className="font-serif text-gray-300">{gameState.teamNames[1]}</span>
-                <span className="font-bold text-silver-metallic text-3xl">{gameState.teamScores[1]}</span>
+                <span className="font-display text-gray-300 font-bold tracking-wider">{gameState.teamNames[1]}</span>
+                <span className="font-bold text-silver-metallic text-3xl font-display">{gameState.teamScores[1]}</span>
               </div>
             </div>
 

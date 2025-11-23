@@ -197,7 +197,7 @@ export const Card: React.FC<CardProps> = ({
       layoutId={layoutId}
       initial={initial}
       animate={animate}
-      whileHover={whileHover}
+
       style={{
         ...style,
         transformStyle: 'preserve-3d',
@@ -215,8 +215,9 @@ export const Card: React.FC<CardProps> = ({
         e.stopPropagation();
         onClick?.();
       }}
-      transition={{ type: "spring", stiffness: 250, damping: 20 }}
-      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      whileTap={{ scale: 0.95, rotate: 0, zIndex: 100 }}
+      whileHover={whileHover || { scale: 1.05, zIndex: 50, transition: { duration: 0.2 } }}
     >
       {isFaceDown ? (
         <CardBack />

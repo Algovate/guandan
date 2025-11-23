@@ -120,57 +120,62 @@ export default function PlayerHand() {
         {/* Hand Cards Area */}
         <div className="relative w-full flex justify-center items-end flex-1 mb-2 md:mb-3" style={{ height: isMobile ? '240px' : '300px' }}>
           <div className="relative h-full flex justify-center items-end w-full max-w-5xl">
-          <AnimatePresence mode="popLayout">
-            {sortedHand.map((card, index) => {
-              const isSelected = selectedCards.some(c => c.id === card.id);
-              const isHighlighted = possiblePlays.some(play =>
-                play.cards.some(c => c.id === card.id)
-              );
+            <AnimatePresence mode="popLayout">
+              {sortedHand.map((card, index) => {
+                const isSelected = selectedCards.some(c => c.id === card.id);
+                const isHighlighted = possiblePlays.some(play =>
+                  play.cards.some(c => c.id === card.id)
+                );
 
-              const layout = calculateFanLayout(sortedHand.length, index, isMobile);
+                const layout = calculateFanLayout(sortedHand.length, index, isMobile);
 
-              return (
-                <motion.div
-                  key={card.id}
-                  layoutId={`card-${card.id}`}
-                  initial={{ y: 200, opacity: 0, scale: 0.8 }}
-                  animate={{
-                    y: isSelected ? layout.y - (isMobile ? 15 : 20) : layout.y,
-                    x: isSelected ? layout.x * 0.95 : layout.x,
-                    rotate: layout.rotate,
-                    opacity: 1,
-                    scale: 1,
-                    zIndex: layout.zIndex
-                  }}
-                  exit={{ y: 200, opacity: 0, transition: { duration: 0.2 } }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  whileHover={{
-                    y: isSelected 
-                      ? layout.y - (isMobile ? 20 : 25) 
-                      : layout.y - (isMobile ? 10 : 20),
-                    scale: 1.1,
-                    zIndex: layout.zIndex + 20,
-                    transition: { duration: 0.2 }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    bottom: isMobile ? 20 : 30,
-                    cursor: 'pointer',
-                    transformOrigin: 'center bottom'
-                  }}
-                >
-                  <Card
-                    card={card}
-                    isSelected={isSelected}
-                    isHighlighted={isHighlighted && !isSelected && isCurrentPlayer}
-                    onClick={() => selectCard(card)}
-                    size={isMobile ? "md" : "lg"}
-                    faceUp={true}
-                  />
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                return (
+                  <motion.div
+                    key={card.id}
+                    layoutId={`card-${card.id}`}
+                    initial={{ y: 200, opacity: 0, scale: 0.8 }}
+                    animate={{
+                      y: isSelected ? layout.y - (isMobile ? 15 : 20) : layout.y,
+                      x: isSelected ? layout.x * 0.95 : layout.x,
+                      rotate: layout.rotate,
+                      opacity: 1,
+                      scale: 1,
+                      zIndex: layout.zIndex
+                    }}
+                    exit={{ y: 200, opacity: 0, transition: { duration: 0.2 } }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 25,
+                      delay: index * 0.03 // Staggered dealing effect
+                    }}
+                    whileHover={{
+                      y: isSelected
+                        ? layout.y - (isMobile ? 20 : 25)
+                        : layout.y - (isMobile ? 10 : 20),
+                      scale: 1.1,
+                      zIndex: layout.zIndex + 20,
+                      transition: { duration: 0.2 }
+                    }}
+                    style={{
+                      position: 'absolute',
+                      bottom: isMobile ? 20 : 30,
+                      cursor: 'pointer',
+                      transformOrigin: 'center bottom'
+                    }}
+                  >
+                    <Card
+                      card={card}
+                      isSelected={isSelected}
+                      isHighlighted={isHighlighted && !isSelected && isCurrentPlayer}
+                      onClick={() => selectCard(card)}
+                      size={isMobile ? "md" : "lg"}
+                      faceUp={true}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -241,8 +246,8 @@ export default function PlayerHand() {
             )}
           </div>
           <div className="flex flex-col">
-            <span className="text-white font-bold font-serif text-lg md:text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
-            <span className="text-[10px] md:text-xs text-gray-300 font-serif uppercase tracking-wider mt-0.5 md:mt-1">{gameState?.teamNames?.[player.team] || `队伍 ${player.team + 1}`}</span>
+            <span className="text-white font-bold font-display text-lg md:text-xl leading-tight tracking-wide text-shadow-md">{player.name}</span>
+            <span className="text-[10px] md:text-xs text-gray-300 font-display uppercase tracking-wider mt-0.5 md:mt-1">{gameState?.teamNames?.[player.team] || `队伍 ${player.team + 1}`}</span>
           </div>
         </div>
       </div>

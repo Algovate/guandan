@@ -9,10 +9,10 @@ interface ToastProps {
 }
 
 const toastStyles = {
-  success: 'bg-ui-success text-white',
-  error: 'bg-ui-error text-white',
-  info: 'bg-ui-primary text-white',
-  warning: 'bg-ui-warning text-white',
+  success: 'bg-[#0a3d24]/90 border-[#4CAF50]/50 text-white',
+  error: 'bg-[#3d0a0a]/90 border-[#F44336]/50 text-white',
+  info: 'bg-[#0a2a3d]/90 border-[#2196F3]/50 text-white',
+  warning: 'bg-[#3d2a0a]/90 border-[#FFC107]/50 text-white',
 };
 
 const icons = {
@@ -22,11 +22,11 @@ const icons = {
   warning: '⚠',
 };
 
-export default function Toast({ 
-  message, 
-  type = 'info', 
+export default function Toast({
+  message,
+  type = 'info',
   duration = 3000,
-  onClose 
+  onClose
 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -47,13 +47,13 @@ export default function Toast({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.9 }}
           transition={{ duration: 0.3, type: "spring" }}
-          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${toastStyles[type]} px-5 md:px-6 py-2.5 md:py-3 rounded-xl shadow-2xl flex items-center gap-2 md:gap-3 min-w-[200px] max-w-[90vw] md:max-w-md mx-4 backdrop-blur-sm`}
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-[100] ${toastStyles[type]} px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 min-w-[200px] max-w-[90vw] md:max-w-md mx-4 backdrop-blur-md border`}
           style={{
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
           }}
         >
-          <div className="text-2xl font-bold">{icons[type]}</div>
-          <div className="font-semibold flex-1">{message}</div>
+          <div className="text-2xl font-bold drop-shadow-md">{icons[type]}</div>
+          <div className="font-semibold flex-1 font-display tracking-wide text-shadow-sm">{message}</div>
         </motion.div>
       )}
     </AnimatePresence>

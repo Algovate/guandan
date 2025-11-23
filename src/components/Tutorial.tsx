@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 
 export default function Tutorial() {
   const { showTutorial, toggleTutorial } = useGameStore();
-  
+
   const rules = [
     {
       title: '游戏简介',
@@ -50,7 +50,7 @@ export default function Tutorial() {
       ],
     },
   ];
-  
+
   return (
     <AnimatePresence>
       {showTutorial && (
@@ -77,79 +77,79 @@ export default function Tutorial() {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-            <div className="glass rounded-3xl shadow-2xl border-2 border-accent-gold/40 p-8 relative overflow-hidden"
-              style={{
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6)'
-              }}
-            >
-              {/* 背景装饰 */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/8 via-transparent to-ui-primary/8 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-              
-              <div className="relative z-10">
-                {/* 标题 */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <div className="text-3xl sm:text-4xl md:text-5xl flex-shrink-0">📖</div>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-accent-gold to-accent-amber bg-clip-text text-transparent break-words min-w-0">
-                      掼蛋游戏规则
-                    </h2>
+              <div className="glass-panel rounded-3xl shadow-2xl border border-[#d4af37]/30 p-8 relative overflow-hidden"
+                style={{
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {/* 背景装饰 */}
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-gold/8 via-transparent to-ui-primary/8 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+
+                <div className="relative z-10">
+                  {/* 标题 */}
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="text-3xl sm:text-4xl md:text-5xl flex-shrink-0">📖</div>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-accent-gold to-accent-amber bg-clip-text text-transparent break-words min-w-0">
+                        掼蛋游戏规则
+                      </h2>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 90 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={toggleTutorial}
+                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl font-bold transition-colors flex-shrink-0 border border-white/10"
+                    >
+                      ×
+                    </motion.button>
                   </div>
+
+                  {/* 规则内容 */}
+                  <div className="space-y-6">
+                    {rules.map((rule, index) => (
+                      <motion.div
+                        key={rule.title}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-black/40 rounded-2xl p-6 border border-white/10 hover:border-[#d4af37]/30 transition-colors"
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="text-4xl flex-shrink-0">{rule.icon}</div>
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-display font-bold text-gold-metallic mb-3">
+                              {rule.title}
+                            </h3>
+                            {Array.isArray(rule.content) ? (
+                              <ul className="space-y-2 text-gray-300">
+                                {rule.content.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="text-accent-gold mt-1">•</span>
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-gray-300 leading-relaxed">{rule.content}</p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* 关闭按钮 */}
                   <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={toggleTutorial}
-                    className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 text-2xl font-bold transition-colors flex-shrink-0"
+                    className="btn-casino-primary w-full mt-8 text-lg py-4"
                   >
-                    ×
+                    我知道了
                   </motion.button>
                 </div>
-                
-                {/* 规则内容 */}
-                <div className="space-y-6">
-                  {rules.map((rule, index) => (
-                    <motion.div
-                      key={rule.title}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white/50 rounded-2xl p-6 border border-white/30"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="text-4xl flex-shrink-0">{rule.icon}</div>
-                        <div className="flex-1">
-                          <h3 className="text-2xl font-display font-bold text-gray-800 mb-3">
-                            {rule.title}
-                          </h3>
-                          {Array.isArray(rule.content) ? (
-                            <ul className="space-y-2 text-gray-700">
-                              {rule.content.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-accent-gold mt-1">•</span>
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <p className="text-gray-700 leading-relaxed">{rule.content}</p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                
-                {/* 关闭按钮 */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={toggleTutorial}
-                  className="btn-accent w-full mt-8 text-lg py-4"
-                >
-                  我知道了
-                </motion.button>
               </div>
-            </div>
             </motion.div>
           </motion.div>
         </>

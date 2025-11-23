@@ -24,14 +24,14 @@ export default function GameInfo() {
         >
           {/* 当前等级 */}
           <div className="flex items-center gap-2 md:gap-3">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-b from-[#d4af37] to-[#b8860b] rounded-xl border border-[#f3d267] shadow-lg flex items-center justify-center">
-              <span className="text-xl md:text-2xl font-serif font-bold text-white drop-shadow-md">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-b from-[#d4af37] to-[#b8860b] rounded-xl border border-[#f3d267] shadow-lg flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-300">
+              <span className="text-xl md:text-2xl font-display font-bold text-white drop-shadow-md">
                 {gameState.level}
               </span>
             </div>
             <div className="flex flex-col justify-center">
-              <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">等级</span>
-              <span className="text-xs md:text-sm font-bold text-gold-metallic tracking-wide">当前级牌</span>
+              <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Level</span>
+              <span className="text-xs md:text-sm font-bold text-gold-metallic tracking-wide font-display">当前级牌</span>
             </div>
           </div>
 
@@ -43,19 +43,18 @@ export default function GameInfo() {
             {gameState.mainSuit && gameState.mainRank ? (
               <>
                 <div className={`w-10 h-10 md:w-12 md:h-12 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-inner flex items-center justify-center`}>
-                  <div 
-                    className={`w-6 h-6 md:w-8 md:h-8 ${
-                      gameState.mainSuit === 'heart' || gameState.mainSuit === 'diamond' 
-                        ? 'text-red-500' 
+                  <div
+                    className={`w-6 h-6 md:w-8 md:h-8 ${gameState.mainSuit === 'heart' || gameState.mainSuit === 'diamond'
+                        ? 'text-red-500'
                         : 'text-white'
-                    }`}
+                      }`}
                   >
                     <SuitIcon suit={gameState.mainSuit as any} />
                   </div>
                 </div>
                 <div className="flex flex-col justify-center">
-                  <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">主牌</span>
-                  <span className="text-xs md:text-sm font-bold text-white font-serif">
+                  <span className="text-[8px] md:text-[10px] text-gray-300 font-bold uppercase tracking-widest mb-0.5">Trump</span>
+                  <span className="text-xs md:text-sm font-bold text-white font-display">
                     {RANK_NAMES[gameState.mainRank]}
                   </span>
                 </div>
@@ -108,9 +107,9 @@ export default function GameInfo() {
         >
           <div className="flex flex-col items-center">
             <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{gameState.teamNames[0]}</div>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#1A237E] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-              <span className="text-white text-base md:text-lg font-bold font-serif relative z-10">{gameState.teamScores[0]}</span>
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#1A237E] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none group-hover:opacity-120 transition-opacity" />
+              <span className="text-white text-base md:text-lg font-bold font-display relative z-10">{gameState.teamScores[0]}</span>
             </div>
           </div>
 
@@ -118,9 +117,9 @@ export default function GameInfo() {
 
           <div className="flex flex-col items-center">
             <div className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">{gameState.teamNames[1]}</div>
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#B71C1C] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-              <span className="text-white text-base md:text-lg font-bold font-serif relative z-10">{gameState.teamScores[1]}</span>
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#B71C1C] rounded-full border-2 border-white/20 shadow-lg flex items-center justify-center relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none group-hover:opacity-120 transition-opacity" />
+              <span className="text-white text-base md:text-lg font-bold font-display relative z-10">{gameState.teamScores[1]}</span>
             </div>
           </div>
         </motion.div >
