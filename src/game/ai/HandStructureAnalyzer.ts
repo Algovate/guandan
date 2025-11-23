@@ -101,7 +101,7 @@ export class HandStructureAnalyzer {
         return { plays, remaining };
     }
 
-    private static extractStraightFlushes(hand: Card[], _mainRank?: Rank, _mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractStraightFlushes(hand: Card[]): { plays: Play[], remaining: Card[] } {
         // Simplified: Check for 5 consecutive same-suit cards
         // This is complex, implementing a basic greedy check
         return { plays: [], remaining: hand }; // Placeholder for now
@@ -125,7 +125,7 @@ export class HandStructureAnalyzer {
             const r1 = tripleRanks[i];
             const r2 = tripleRanks[i + 1];
 
-            // Check if consecutive and not main rank
+            // Check if consecutive
             if (RANK_ORDER.indexOf(r2) === RANK_ORDER.indexOf(r1) + 1) {
                 const cards1 = rankGroups.get(r1)!;
                 const cards2 = rankGroups.get(r2)!;
@@ -141,7 +141,7 @@ export class HandStructureAnalyzer {
         return { plays, remaining };
     }
 
-    private static extractTriplePairs(hand: Card[], _mainRank?: Rank, _mainSuit?: Suit): { plays: Play[], remaining: Card[] } {
+    private static extractTriplePairs(hand: Card[]): { plays: Play[], remaining: Card[] } {
         // Similar to plates but for pairs
         return { plays: [], remaining: hand }; // Placeholder
     }
@@ -150,10 +150,10 @@ export class HandStructureAnalyzer {
         const plays: Play[] = [];
         let remaining = [...hand];
 
-        // Filter out Jokers and Main Rank (usually not used in straights unless desperate)
+        // Filter out Jokers (usually not used in straights unless desperate)
         // For simplicity, we only look for natural straights
         const potentialCards = remaining.filter(c =>
-            c.suit !== Suit.JOKER && false
+            c.suit !== Suit.JOKER
         );
 
         const rankGroups = this.groupCardsByRank(potentialCards);
@@ -194,7 +194,7 @@ export class HandStructureAnalyzer {
                     // To keep it simple, we just return one straight at a time or restart. 
                     // Let's just break and return for now, or recurse?
                     // Recursion is safer.
-                    const result = this.extractStraights(remaining, );
+                    const result = this.extractStraights(remaining);
                     plays.push(...result.plays);
                     remaining = result.remaining;
                     return { plays, remaining };

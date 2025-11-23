@@ -4,7 +4,7 @@ import { findPossiblePlays, comparePlays, canBeat } from '../CardTypes';
 import { HandEvaluator } from './HandEvaluator';
 
 /**
- * Strategy Engine - Simplified without trump card dependencies
+ * Strategy Engine - Main AI decision making logic
  */
 export class StrategyEngine {
   /**

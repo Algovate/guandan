@@ -14,7 +14,7 @@ export default function GameInfo({ onOpenPlayHistory, onOpenAllHands }: GameInfo
 
   return (
     <>
-      {/* 左上角：游戏状态 (级数 + 主牌) */}
+      {/* 左上角：游戏状态 (级数) */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
